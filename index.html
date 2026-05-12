@@ -2539,7 +2539,12 @@ function cfgIrDataRegChange(){
 }
 function cfgIrCheckBtn(){const nome=document.getElementById('cfg-ir-nome').value.trim();const status=document.getElementById('cfg-ir-status').value;const grau=document.getElementById('cfg-ir-grau').value;const irregOk=status!=='irregular'||document.getElementById('cfg-ir-irreg-mes').value!=='';document.getElementById('cfg-ir-btn').disabled=!(nome&&status&&grau&&irregOk);}
 async function cfgSalvarIrmao(){
-  const nome=document.getElementById('cfg-ir-nome').value.trim();const status=document.getElementById('cfg-ir-status').value;const grau=document.getElementById('cfg-ir-grau').value;const irregular_desde=status==='irregular'?parseInt(document.getElementById('cfg-ir-irreg-mes').value):null;
+  const nome=document.getElementById('cfg-ir-nome').value.trim();
+  const status=document.getElementById('cfg-ir-status').value;
+  const grau=document.getElementById('cfg-ir-grau').value;
+  const irregular_desde=status==='irregular'?parseInt(document.getElementById('cfg-ir-irreg-mes').value):null;
+  const data_reg=document.getElementById('cfg-ir-data-reg').value||null;
+  const mes_inicial=document.getElementById('cfg-ir-mes-ini').value!==''?parseInt(document.getElementById('cfg-ir-mes-ini').value):null;
   try{
     if(S.cfgIrEditId){
       await dbUpdate('irmaos',S.cfgIrEditId,{nome,status,grau,irregular_desde,data_reg,mes_inicial});
@@ -2738,7 +2743,8 @@ async function init(){
   }
   recalcTaloes();elAtualizarTalaoForm();
   const hj=hoje();['el-data','sl-data','tr-data','ts-data'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=hj;});
-  ['el','sl','tr','ts'].forEach(p=>buildTblMeses(p,[]));
+  // Popular filtros de meses com dados reais
+  ['el','sl','tr','ts'].forEach(p=>refreshTblMeses(p));
   populateIrmaoSelect();
   buildMesesChips(document.getElementById('el-meses-chips'),elCheckBtn);
   aplicarPerfil();
