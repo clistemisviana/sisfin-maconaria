@@ -318,7 +318,7 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
 .dash-block{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:28px}
 .gauges-and-charts{display:grid;grid-template-columns:.6fr 1fr;gap:16px}
 /* Dois gauges lado a lado */
-.gauges-row-wrap{display:flex;flex-direction:column;gap:0}
+.gauges-row-wrap{display:flex;flex-direction:column;gap:12px}
 .gauges-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .gauge-card{
   background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--r);
@@ -784,6 +784,15 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
           <div class="tr-donut-item"><div class="tr-donut-wrap"><canvas id="d-out" width="130" height="130"></canvas><div class="tr-donut-center"><div class="tr-donut-pct" id="dp-out" style="color:var(--orange)">0%</div></div></div><div class="tr-donut-label">Outros</div><div class="tr-donut-val" id="dv-out" style="color:var(--orange)">—</div></div>
         </div>
       </div>
+    </div>
+
+    <!-- Gráfico de linha — arrecadação do tronco por sessão -->
+    <div class="chart-card" style="margin-top:14px">
+      <div class="cc-head">
+        <div class="cc-dot" style="background:linear-gradient(135deg,var(--green),var(--teal))"></div>
+        <div class="cc-title">Arrecadação por sessão — Tronco de Beneficência</div>
+      </div>
+      <div style="position:relative;height:200px"><canvas id="c-tronco-sessoes"></canvas></div>
     </div>
 
     <div class="sec-div">🍽️ Ágape</div>
@@ -1669,6 +1678,46 @@ function renderDashTronco(){
   mkDonut('d-lar',Math.round(trLar/tot*100),'#22d3a0');mkDonut('d-ce',Math.round(trCE/tot*100),'#8b5cf6');mkDonut('d-out',Math.round(trOut/tot*100),'#f59e0b');
   animBarPct('dp-lar',trLar/tot*100);animBarPct('dp-ce',trCE/tot*100);animBarPct('dp-out',trOut/tot*100);
   animVal(document.getElementById('dv-lar'),trLar);animVal(document.getElementById('dv-ce'),trCE);animVal(document.getElementById('dv-out'),trOut);
+
+  // Gráfico de linha — arrecadação por sessão do tronco
+  if(CC['c-tronco-sessoes'])CC['c-tronco-sessoes'].destroy();
+  const canvTr=document.getElementById('c-tronco-sessoes');if(!canvTr)return;
+  // Ordenar sessões por data
+  const sessoes=[...trEnt].sort((a,b)=>a.data.localeCompare(b.data));
+  const trLabels=sessoes.map(r=>{
+    const d=fmtDate(r.data);
+    const tipo=r.sessao||r.tipo_sessao||'';
+    return tipo?[d,tipo]:[d];
+  });
+  const trVals=sessoes.map(r=>r.total||0);
+  CC['c-tronco-sessoes']=new Chart(canvTr,{
+    type:'line',
+    data:{labels:trLabels,datasets:[{
+      label:'Arrecadado',data:trVals,
+      borderColor:'#22d3a0',backgroundColor:'rgba(34,211,160,.08)',
+      fill:true,tension:.4,borderWidth:2.5,
+      pointRadius:5,pointBackgroundColor:'#22d3a0',
+      pointBorderColor:'#fff',pointBorderWidth:1.5,
+    }]},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:700},
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'rgba(13,14,42,.95)',borderColor:'rgba(34,211,160,.3)',
+          borderWidth:1,padding:10,cornerRadius:9,titleColor:'#fff',bodyColor:'rgba(255,255,255,.85)',
+          callbacks:{label:c=>' '+fmt(c.parsed.y)}
+        }
+      },
+      layout:{padding:{top:32,left:16,right:16,bottom:4}},
+      scales:{
+        x:{ticks:{color:'rgba(255,255,255,.7)',font:{size:10,weight:'600'},maxRotation:0},grid:{display:false}},
+        y:{display:false,afterDataLimits(s){if(s.max>0)s.max=s.max*1.5;}}
+      }
+    },
+    plugins:[lineDataLabels]
+  });
 }
 
 function renderDashAgape(){
@@ -1807,7 +1856,9 @@ function renderDashInadimplencia(mesesFilt){
   document.getElementById('dash-inad-pag-sub').textContent='pagaram em dia';
   document.getElementById('dash-inad-sub').textContent=`${total} mensalistas`;
   document.getElementById('dash-inad-barra').style.width=pct+'%';
+  document.getElementById('dash-inad-barra').style.background=pct>=80?'var(--green)':pct>=60?'var(--orange)':'var(--red)';
   document.getElementById('dash-inad-pct').textContent=pct+'%';
+  document.getElementById('dash-inad-pct').style.color=pct>=80?'var(--green)':pct>=60?'var(--orange)':'var(--red)';
 }
 
 function renderDash(){
