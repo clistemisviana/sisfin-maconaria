@@ -1678,6 +1678,12 @@ function renderDashAgape(){
   const agCompras=agSai.filter(r=>r.agapeTipo==='compras').reduce((s,r)=>s+r.valor,0);
   const agMdo=agSai.filter(r=>r.agapeTipo==='mao-de-obra').reduce((s,r)=>s+r.valor,0);
   const agTotal=agCompras+agMdo;
+
+  // Declarar mG antes de usar
+  const allAg=S.saidasLoja.filter(r=>getAno(r.data)===ano&&r.cat==='agape');
+  const mComDados=mesesComDados(allAg,r=>r.data);
+  const mG=mesesFilt.length>0?[...mesesFilt].sort((a,b)=>a-b):mComDados;
+
   // Sessões ágape: conta sessões do tronco que têm lançamento de ágape no mesmo mês/período
   const mesesAgape=mG.length>0?mG:[...new Set(agSai.map(r=>getMesIdx(r.data)))];
   const sessoesAgape=S.troncoEntradas.filter(r=>{
@@ -1693,9 +1699,6 @@ function renderDashAgape(){
     const corC='#00ffcc';const corM='#ff6b35';
     const gC=ctx2.createLinearGradient(0,0,0,190);gC.addColorStop(0,'rgba(0,255,204,1)');gC.addColorStop(1,'rgba(0,255,204,.45)');
     const gM=ctx2.createLinearGradient(0,0,0,190);gM.addColorStop(0,'rgba(255,107,53,1)');gM.addColorStop(1,'rgba(255,107,53,.45)');
-    const allAg=S.saidasLoja.filter(r=>getAno(r.data)===ano&&r.cat==='agape');
-    const mComDados=mesesComDados(allAg,r=>r.data);
-    const mG=mesesFilt.length>0?[...mesesFilt].sort((a,b)=>a-b):mComDados;
     const labs=mG.map(mi=>`${MESES_NOMES[mi]}`);
     const dC=mG.map(mi=>agSai.filter(r=>getMesIdx(r.data)===mi&&r.agapeTipo==='compras').reduce((s,r)=>s+r.valor,0));
     const dM=mG.map(mi=>agSai.filter(r=>getMesIdx(r.data)===mi&&r.agapeTipo==='mao-de-obra').reduce((s,r)=>s+r.valor,0));
