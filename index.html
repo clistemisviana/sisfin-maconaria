@@ -2216,14 +2216,10 @@ function gerarHtmlTaloes(registros,loja){
         </div>
       </div>
       <div class="talao-body">
-        <div class="talao-row4">
-          <div class="talao-campo span2"><label>Irmão</label><p>${r.irmao}</p></div>
-          <div class="talao-campo"><label>Pagamento</label><p>${tipoLabel}</p></div>
-          <div class="talao-campo"><label>Razão</label><p>${razaoLabel}</p></div>
-        </div>
-        <div class="talao-row4">
-          <div class="talao-campo span4"><label>Mês(es) de referência</label><p>${mesesStr}</p></div>
-        </div>
+        <div class="talao-campo span2"><label>Irmão</label><p>${r.irmao}</p></div>
+        <div class="talao-campo"><label>Pagamento</label><p>${tipoLabel}</p></div>
+        <div class="talao-campo"><label>Razão</label><p>${razaoLabel}</p></div>
+        <div class="talao-campo span2"><label>Mês(es) de referência</label><p>${mesesStr}</p></div>
         <div class="talao-footer">
           <div class="talao-valor"><label>Valor</label><p>${fmt(r.valor)}</p></div>
           <div class="talao-assina"><span>Tesoureiro</span></div>
@@ -2252,23 +2248,23 @@ function gerarHtmlTaloes(registros,loja){
     .talao{height:100%;padding:8px 10px;display:flex;flex-direction:column;gap:5px}
     .talao-vazio{background:#fafafa}
     .talao-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
-    .talao-loja-nome{font-size:8.5px;font-weight:700;letter-spacing:.03em}
-    .talao-loja-end{font-size:7px;color:#555;margin-top:1px}
-    .talao-num-box{text-align:right;min-width:55px;padding-left:8px}
-    .talao-num-label{font-size:7px;color:#777}
-    .talao-num-val{font-size:17px;font-weight:700;line-height:1.1}
-    .talao-num-ano{font-size:7px;color:#555}
-    .talao-body{border-top:0.5px solid #ddd;padding-top:5px;display:flex;flex-direction:column;gap:4px;flex:1}
-    .talao-row4{display:grid;grid-template-columns:repeat(4,1fr);gap:4px 8px}
+    .talao-loja-nome{font-size:10px;font-weight:700;letter-spacing:.03em}
+    .talao-loja-end{font-size:8.5px;color:#555;margin-top:2px}
+    .talao-num-box{text-align:right;min-width:62px;padding-left:10px}
+    .talao-num-label{font-size:8px;color:#888}
+    .talao-num-val{font-size:20px;font-weight:700;line-height:1.1}
+    .talao-num-ano{font-size:8px;color:#666}
+    .talao-body{border-top:0.5px solid #ddd;padding-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;flex:1}
+    .talao-row4{display:contents}
     .span2{grid-column:span 2}
-    .span4{grid-column:span 4}
-    .talao-campo label{font-size:7px;color:#777;display:block;white-space:nowrap}
-    .talao-campo p{font-size:8px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .talao-footer{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:4px}
-    .talao-valor label{font-size:7px;color:#777}
-    .talao-valor p{font-size:13px;font-weight:700}
-    .talao-assina{text-align:center;border-top:0.5px solid #999;padding-top:2px;min-width:110px}
-    .talao-assina span{font-size:7px;color:#777}
+    .span4{grid-column:span 2}
+    .talao-campo label{font-size:8.5px;color:#777;display:block;white-space:nowrap;margin-bottom:1px}
+    .talao-campo p{font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .talao-footer{grid-column:span 2;display:flex;justify-content:space-between;align-items:flex-end;margin-top:4px;padding-top:6px;border-top:0.5px solid #eee}
+    .talao-valor label{font-size:8.5px;color:#777}
+    .talao-valor p{font-size:16px;font-weight:700}
+    .talao-assina{text-align:center;border-top:0.5px solid #999;padding-top:3px;min-width:120px}
+    .talao-assina span{font-size:8.5px;color:#777}
     @media print{body{margin:0}@page{size:A4;margin:5mm}}
   </style></head><body>${paginas.join('')}</body></html>`;
 }
