@@ -278,6 +278,7 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
 .chip-esp{background:rgba(245,158,11,.15);color:var(--orange)}
 .chip-mens{background:rgba(139,92,246,.15);color:var(--violet2)}
 .chip-doa{background:rgba(236,72,153,.15);color:var(--pink)}
+.chip-orange{background:rgba(201,168,76,.15);color:#C9A84C}
 .chip-ap{background:rgba(99,102,241,.15);color:#818cf8}
 .chip-co{background:rgba(245,158,11,.15);color:var(--orange)}
 .chip-me{background:rgba(139,92,246,.15);color:var(--violet2)}
@@ -646,6 +647,7 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
     <div class="sb-sec-lbl">Loja</div>
     <div class="nav sub" data-page="mensalidades"><span class="nav-ic">💰</span>Mensalidades</div>
     <div class="nav sub" data-page="doacoes"><span class="nav-ic">🤝</span>Doações</div>
+    <div class="nav sub" data-page="taxas-gorn"><span class="nav-ic">🏛️</span>Taxas GORN</div>
     <div class="nav sub" data-page="entrada-loja"><span class="nav-ic">📥</span>Entrada</div>
     <div class="nav sub" data-page="saida-loja"><span class="nav-ic">📤</span>Saída</div>
   </div>
@@ -840,6 +842,16 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
     <div class="tbl-wrap"><table><thead><tr id="doa-thead-row"><th style="width:175px">Irmão</th></tr></thead><tbody id="doa-tbody"></tbody><tfoot><tr class="tfoot-row" id="doa-tfoot"><td>Total arrecadado</td></tr></tfoot></table></div>
   </div>
 
+  <!-- TAXAS GORN -->
+  <div class="page" id="page-taxas-gorn">
+    <div class="sec-div">Taxas GORN</div>
+    <div class="tbl-top">
+      <div class="tbl-title"><div class="ft-bar" style="background:#C9A84C;width:3px;height:13px;border-radius:2px"></div>Registro de Taxas GORN</div>
+      <div style="display:flex;gap:8px"><button class="btn btn-excel btn-sm" onclick="exportExcel('taxas-gorn')">📥 Excel</button><div class="count-badge" style="background:rgba(201,168,76,.15);color:#C9A84C" id="tg-badge">—</div></div>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr id="tg-thead-row"><th style="width:175px">Irmão</th></tr></thead><tbody id="tg-tbody"></tbody><tfoot><tr class="tfoot-row" id="tg-tfoot"><td>Total arrecadado</td></tr></tfoot></table></div>
+  </div>
+
   <!-- ENTRADA LOJA -->
   <div class="page" id="page-entrada-loja">
     <div class="sec-div">Entrada — Loja</div>
@@ -860,7 +872,7 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
         <div class="field grow"><label>Irmão</label><select id="el-irmao"><option value="">— selecione —</option></select></div>
         <div class="field w120"><label>Pagamento</label><select id="el-tipo"><option value="">— tipo —</option><option value="pix">PIX</option><option value="especie">Espécie</option></select></div>
         <div class="field w140"><label>Recebedor</label><input type="text" id="el-receb" placeholder="Nome"></div>
-        <div class="field w120"><label>Razão</label><select id="el-razao"><option value="">— razão —</option><option value="mensalidade">Mensalidade</option><option value="doacao">Doação</option></select></div>
+        <div class="field w120"><label>Razão</label><select id="el-razao"><option value="">— razão —</option><option value="mensalidade">Mensalidade</option><option value="doacao">Doação</option><option value="taxa-gorn">Taxa GORN</option></select></div>
         <div class="field w100"><label>Valor (R$)</label><input type="number" id="el-valor" placeholder="0,00" min="0" step="0.01"></div>
       </div>
       <div class="meses-wrap hidden" id="el-meses-wrap">
@@ -888,17 +900,24 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
     </div>
     <div class="tbl-top">
       <div class="tbl-title"><div class="ft-bar" style="background:var(--green);width:3px;height:13px;border-radius:2px"></div>Entradas Registradas</div>
-      <div style="display:flex;gap:8px;align-items:center"><button class="btn btn-excel btn-sm" onclick="exportExcel('el')">📥 Excel</button><div class="count-badge" style="background:rgba(34,211,160,.12);color:var(--green)" id="el-badge">0</div></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" id="el-print-btn" style="display:none;background:rgba(139,92,246,.15);color:var(--violet2);border-color:rgba(139,92,246,.3)" onclick="imprimirTaloesSelecionados()">🖨️ Imprimir selecionados (<span id="el-sel-count">0</span>)</button>
+        <button class="btn btn-excel btn-sm" onclick="exportExcel('el')">📥 Excel</button>
+        <div class="count-badge" style="background:rgba(34,211,160,.12);color:var(--green)" id="el-badge">0</div>
+      </div>
     </div>
     <div class="tbl-filters"><input class="tbl-search" id="el-search" placeholder="🔍 Pesquisar..." oninput="renderElTabela()"><div id="el-tbl-meses" style="display:flex;flex-wrap:wrap;gap:4px"></div></div>
     <div class="tbl-wrap"><table>
       <thead><tr>
+        <th style="width:32px" class="center"><input type="checkbox" id="el-check-all" onclick="elToggleCheckAll(this)" style="cursor:pointer"></th>
         <th style="width:55px" class="center">Talão</th><th style="width:88px">Data</th><th style="width:148px">Irmão</th>
         <th style="width:75px" class="center sep">Pagto</th><th style="width:120px" class="sep">Recebedor</th>
         <th style="width:95px" class="center sep">Razão</th><th class="sep">Mês(es)</th>
-        <th style="width:95px" class="right sep-accent">Valor</th><th style="width:70px" class="center sep">Ações</th>
+        <th style="width:95px" class="right sep-accent">Valor</th>
+        <th style="width:80px" class="center sep">Impresso</th>
+        <th style="width:70px" class="center sep">Ações</th>
       </tr></thead>
-      <tbody id="el-tbody"><tr class="empty-row"><td colspan="9">Nenhuma entrada registrada.</td></tr></tbody>
+      <tbody id="el-tbody"><tr class="empty-row"><td colspan="11">Nenhuma entrada registrada.</td></tr></tbody>
     </table></div>
   </div>
 
@@ -1087,6 +1106,41 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
       </div>
     </div>
     <div class="config-content" id="config-content">
+
+      <!-- CARD USO DO SUPABASE -->
+      <div class="config-section" style="background:rgba(139,92,246,.05);border-color:rgba(139,92,246,.2)">
+        <h3>☁️ Uso do Banco de Dados</h3>
+        <p style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:14px;line-height:1.6">Espaço utilizado no Supabase em tempo real. Limite gratuito: <strong style="color:var(--violet2)">500MB</strong>.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
+          <div class="kpi" style="padding:12px 14px">
+            <div class="kpi-label">📦 Banco de dados</div>
+            <div class="kpi-val" id="supa-db-size" style="color:var(--violet2);font-size:18px">—</div>
+            <div class="kpi-sub" id="supa-db-pct">calculando...</div>
+          </div>
+          <div class="kpi" style="padding:12px 14px">
+            <div class="kpi-label">📋 Total de registros</div>
+            <div class="kpi-val" id="supa-total-rows" style="color:var(--green);font-size:18px">—</div>
+            <div class="kpi-sub">em todas as tabelas</div>
+          </div>
+          <div class="kpi" style="padding:12px 14px">
+            <div class="kpi-label">🟢 Limite gratuito</div>
+            <div class="kpi-val" style="color:var(--green);font-size:18px">500 MB</div>
+            <div class="kpi-sub" id="supa-limite-sub">plano free</div>
+          </div>
+        </div>
+        <!-- Barra de uso -->
+        <div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:10px;color:rgba(255,255,255,.4)">Uso atual</span>
+            <span style="font-size:10px;font-weight:700" id="supa-pct-label" style="color:var(--green)">0%</span>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden">
+            <div id="supa-barra" style="height:100%;width:0%;background:var(--green);border-radius:3px;transition:width .8s ease"></div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="carregarUsoSupabase()">🔄 Atualizar</button>
+      </div>
+
       <div class="config-section">
         <h3>🏛️ Identidade da Loja</h3>
         <div class="logo-preview" id="cfg-logo" onclick="document.getElementById('cfg-logo-file').click()">⌖<img id="cfg-logo-img" src="" alt=""></div>
@@ -1296,7 +1350,7 @@ function aplicarPerfil(){
   const badge=document.getElementById('tb-perfil-badge');
   if(badge){badge.textContent=isAdmin?'Admin':'Usuário';badge.className='tb-perfil'+(isAdmin?' admin':'');}
   // Ocultar menu itens para usuário comum
-  const apenasAdmin=['mensalidades','doacoes','entrada-loja','saida-loja','tronco-entrada','tronco-saida','irmaos','config'];
+  const apenasAdmin=['mensalidades','doacoes','taxas-gorn','entrada-loja','saida-loja','tronco-entrada','tronco-saida','irmaos','config'];
   apenasAdmin.forEach(p=>{
     document.querySelectorAll(`.nav[data-page="${p}"]`).forEach(el=>{
       el.style.display=isAdmin?'':'none';
@@ -1407,7 +1461,7 @@ async function dbLoad(){
       S.config.saldo_ant_tronco=parseFloat(S.config.saldo_ant_tronco)||0;
     }
     S.irmaos=irm.data||[];
-    S.entradasLoja=(el.data||[]).map(r=>({...r,ano:getAno(r.data),mesesRef:r.meses_ref||[],receb:r.recebedor,razao:r.razao,tipo:r.tipo,irmao:r.irmao,valor:parseFloat(r.valor),talao:r.talao===0||r.talao==='0'?'S/N':r.talao}));
+    S.entradasLoja=(el.data||[]).map(r=>({...r,ano:getAno(r.data),mesesRef:r.meses_ref||[],receb:r.recebedor,razao:r.razao,tipo:r.tipo,irmao:r.irmao,valor:parseFloat(r.valor),talao:r.talao===0||r.talao==='0'?'S/N':r.talao,impresso_em:r.impresso_em||null}));
     S.saidasLoja=(sl.data||[]).map(r=>({...r,cat:r.categoria,agapeTipo:r.agape_tipo,desc:r.descricao,fotos:r.fotos||[],valor:parseFloat(r.valor)}));
     S.troncoEntradas=(tr.data||[]).map(r=>({...r,ano:getAno(r.data),sessao:r.sessao,qtd:r.qtd,total:parseFloat(r.total),esp:parseFloat(r.esp||0),pix:parseFloat(r.pix||0),qtdpix:r.qtdpix||0,magna:r.magna}));
     S.troncoSaidas=(ts.data||[]).map(r=>({...r,cat:r.categoria,desc:r.descricao,fotos:r.fotos||[],valor:parseFloat(r.valor)}));
@@ -1465,7 +1519,7 @@ function refreshTblMeses(prefix){
 }
 
 /* ═══════════════ NAVEGAÇÃO ═══════════════ */
-const PAGE_TITLES={dash:'Dashboard',mensalidades:'Mensalidades',doacoes:'Doações','entrada-loja':'Entrada — Loja','saida-loja':'Saída — Loja','tronco-entrada':'Tronco — Entradas','tronco-saida':'Tronco — Saídas',irmaos:'Irmãos',config:'Configurações'};
+const PAGE_TITLES={dash:'Dashboard',mensalidades:'Mensalidades',doacoes:'Doações','taxas-gorn':'Taxas GORN','entrada-loja':'Entrada — Loja','saida-loja':'Saída — Loja','tronco-entrada':'Tronco — Entradas','tronco-saida':'Tronco — Saídas',irmaos:'Irmãos',config:'Configurações'};
 function navigateTo(p){
   // Usuário comum só pode acessar o dashboard
   if(SESSAO.perfil==='usuario'&&p!=='dash')return;
@@ -1474,7 +1528,7 @@ function navigateTo(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+p)?.classList.add('active');
   document.getElementById('tb-title').textContent=PAGE_TITLES[p]||p;
-  ({dash:renderDash,mensalidades:renderMensalidades,doacoes:renderDoacoes,irmaos:renderIrmaos}[p]||function(){})();
+  ({dash:renderDash,mensalidades:renderMensalidades,doacoes:renderDoacoes,'taxas-gorn':renderTaxasGorn,irmaos:renderIrmaos}[p]||function(){})();
 }
 
 /* ═══════════════ LIQUID GAUGE — ENTRADAS E SAÍDAS ═══════════════ */
@@ -1612,12 +1666,15 @@ function renderDashLoja(){
   // Categorias laterais — Entradas (mensalidades + doações)
   const totalMens=entLoja.filter(r=>r.razao==='mensalidade').reduce((s,r)=>s+r.valor,0);
   const totalDoa=entLoja.filter(r=>r.razao==='doacao').reduce((s,r)=>s+r.valor,0);
+  const totalTaxa=entLoja.filter(r=>r.razao==='taxa-gorn').reduce((s,r)=>s+r.valor,0);
   document.getElementById('gi-ent-desc').innerHTML=
     `<span style="color:var(--green);font-weight:900;font-size:13px">${fmt(totalEntSemSaldo)}</span><br>`+
     `<span style="font-size:10px;color:rgba(255,255,255,.4)">${Math.round(totalEntSemSaldo/Math.max(metaAnual,1)*100)}% do esperado</span><br>`+
     `<div style="margin-top:6px;font-size:10px;line-height:1.8">`+
     `<span style="color:rgba(255,255,255,.5)">Mensalidades: </span><span style="color:var(--green);font-weight:700">${fmt(totalMens)}</span><br>`+
-    (totalDoa>0?`<span style="color:rgba(255,255,255,.5)">Doações: </span><span style="color:var(--pink);font-weight:700">${fmt(totalDoa)}</span>`:'')+'</div>';
+    (totalDoa>0?`<span style="color:rgba(255,255,255,.5)">Doações: </span><span style="color:var(--pink);font-weight:700">${fmt(totalDoa)}</span><br>`:'')+
+    (totalTaxa>0?`<span style="color:rgba(255,255,255,.5)">Taxa GORN: </span><span style="color:#C9A84C;font-weight:700">${fmt(totalTaxa)}</span>`:'')+
+    '</div>';
 
   // Categorias laterais — Saídas por categoria
   const catAgrupadas={};
@@ -2054,7 +2111,169 @@ function renderMensalidades(){
   tfoot.appendChild(tdTF);
 }
 
-/* ═══════════════ DOAÇÕES ═══════════════ */
+/* ═══════════════ TAXAS GORN ═══════════════ */
+function renderTaxasGorn(){
+  const ano=S.config.ano;
+  const ent=S.entradasLoja.filter(r=>r.ano===ano&&r.razao==='taxa-gorn');
+  const meses=[...new Set(ent.map(r=>getMesIdx(r.data)))].sort((a,b)=>a-b);
+  const taxaMap={};const colTotals=Array(12).fill(0);
+  ent.forEach(r=>{const mi=getMesIdx(r.data);if(!taxaMap[r.irmao])taxaMap[r.irmao]={};taxaMap[r.irmao][mi]=(taxaMap[r.irmao][mi]||0)+r.valor;colTotals[mi]+=r.valor;});
+  const nomes=[...new Set(ent.map(r=>r.irmao))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  document.getElementById('tg-badge').textContent=nomes.length+' pagador'+(nomes.length!==1?'es':'');
+  // Cabeçalho
+  const theadRow=document.getElementById('tg-thead-row');theadRow.innerHTML='<th style="width:175px">Irmão</th>';
+  meses.forEach(mi=>{const th=document.createElement('th');th.className='month-th-wrap sep';th.innerHTML=`<div class="month-th-inner"><div class="month-bar" style="background:#C9A84C">${MESES_NOMES[mi]} ${ano}</div></div>`;theadRow.appendChild(th);});
+  const thTot=document.createElement('th');thTot.style.width='110px';thTot.className='right sep-accent';thTot.textContent='Total';theadRow.appendChild(thTot);
+  // Corpo
+  const tbody=document.getElementById('tg-tbody');tbody.innerHTML='';let totalGeral=0;
+  nomes.forEach(nome=>{
+    const tr=document.createElement('tr');const tdN=document.createElement('td');tdN.textContent=nome;tr.appendChild(tdN);let rowTotal=0;
+    meses.forEach(mi=>{const td=document.createElement('td');td.className='sep';const v=(taxaMap[nome]||{})[mi]||0;if(v>0){td.className='sep hl-green';td.textContent=fmt(v);rowTotal+=v;totalGeral+=v;}else{td.style.color='rgba(255,255,255,.2)';td.style.textAlign='center';td.textContent='—';}tr.appendChild(td);});
+    const tdT=document.createElement('td');tdT.className='right sep-accent hl-purple';tdT.textContent=rowTotal>0?fmt(rowTotal):'—';tr.appendChild(tdT);tbody.appendChild(tr);
+  });
+  // Rodapé
+  const tfoot=document.getElementById('tg-tfoot');tfoot.innerHTML='<td>Total arrecadado</td>';
+  meses.forEach(mi=>{const td=document.createElement('td');td.className='sep';td.style.cssText='color:#C9A84C;font-weight:700;font-size:11px;text-align:center';td.textContent=fmt(colTotals[mi]);tfoot.appendChild(td);});
+  const tdTF=document.createElement('td');tdTF.className='right sep-accent hl-purple';tdTF.textContent=fmt(totalGeral);tfoot.appendChild(tdTF);
+}
+
+/* ═══════════════ CHECKBOX E IMPRESSÃO DE TALÕES ═══════════════ */
+const elSelecionados=new Set();
+
+function elToggleCheckAll(chk){
+  const checkboxes=document.querySelectorAll('.el-row-check');
+  checkboxes.forEach(c=>{c.checked=chk.checked;const id=c.dataset.id;if(chk.checked)elSelecionados.add(id);else elSelecionados.delete(id);});
+  elAtualizarBotaoImprimir();
+}
+
+function elToggleCheck(id,chk){
+  if(chk.checked)elSelecionados.add(id);else elSelecionados.delete(id);
+  elAtualizarBotaoImprimir();
+}
+
+function elAtualizarBotaoImprimir(){
+  const btn=document.getElementById('el-print-btn');
+  const cnt=document.getElementById('el-sel-count');
+  const n=elSelecionados.size;
+  btn.style.display=n>0?'':'none';
+  cnt.textContent=n;
+}
+
+async function imprimirTaloesSelecionados(){
+  const ids=[...elSelecionados];
+  const registros=S.entradasLoja.filter(r=>ids.includes(r.id));
+  if(!registros.length)return;
+
+  // Verificar se algum já foi impresso
+  const jaImpresos=registros.filter(r=>r.impresso_em);
+  if(jaImpresos.length>0){
+    const nomes=jaImpresos.map(r=>`#${r.talao} — ${r.irmao.split(' ').slice(0,2).join(' ')} (${fmtDate(r.impresso_em?.split('T')[0])})`).join('\n');
+    const confirmar=confirm(`⚠️ ${jaImpresos.length} talão(ões) já foram impressos:\n\n${nomes}\n\nDeseja imprimir novamente?`);
+    if(!confirmar)return;
+  }
+
+  // Gerar HTML de impressão
+  const loja=S.config.nome_loja||'Loja Filhos da Fé';
+  const html=gerarHtmlTaloes(registros,loja);
+  const win=window.open('','_blank');
+  win.document.write(html);win.document.close();
+  win.onload=()=>{win.print();win.onafterprint=()=>win.close();};
+
+  // Marcar como impresso no banco
+  const agora=new Date().toISOString();
+  for(const r of registros){
+    await db.from('entradas_loja').update({impresso_em:agora}).eq('id',r.id);
+    const idx=S.entradasLoja.findIndex(x=>x.id===r.id);
+    if(idx>=0)S.entradasLoja[idx].impresso_em=agora;
+  }
+  elSelecionados.clear();
+  elAtualizarBotaoImprimir();
+  renderElTabela();
+  toast('Talões marcados como impressos ✓');
+}
+
+function gerarHtmlTaloes(registros,loja){
+  const pares=[];
+  for(let i=0;i<registros.length;i+=2)pares.push([registros[i],registros[i+1]||null]);
+
+  const talaoHtml=(r)=>{
+    if(!r)return `<div class="talao talao-vazio"></div>`;
+    const mesesStr=(r.mesesRef||[]).map(m=>{const mi=typeof m==='object'?m.mi:m;const mAno=typeof m==='object'?(m.ano||r.ano):r.ano;return MESES_NOMES[mi]+' '+mAno;}).join(' · ')||String(r.ano);
+    const razaoLabel=r.razao==='mensalidade'?'Mensalidade':r.razao==='doacao'?'Doação':r.razao==='taxa-gorn'?'Taxa GORN':r.razao;
+    const tipoLabel=r.tipo==='pix'?'PIX':'Espécie';
+    const talNum=r.talao==='S/N'||r.talao===0?'S/N':'#'+r.talao;
+    return `<div class="talao">
+      <div class="talao-header">
+        <div class="talao-loja">
+          <div class="talao-loja-nome">${loja.toUpperCase()}</div>
+          <div class="talao-loja-end">Rua Santo Antônio, 736, Centro — Natal/RN</div>
+          <div class="talao-loja-end">Fundada em 23 de outubro de 1899</div>
+        </div>
+        <div class="talao-num-box">
+          <div class="talao-num-label">Talão</div>
+          <div class="talao-num-val">${talNum}</div>
+          <div class="talao-num-ano">Ano: ${r.ano}</div>
+        </div>
+      </div>
+      <div class="talao-body">
+        <div class="talao-row4">
+          <div class="talao-campo span2"><label>Irmão</label><p>${r.irmao}</p></div>
+          <div class="talao-campo"><label>Pagamento</label><p>${tipoLabel}</p></div>
+          <div class="talao-campo"><label>Razão</label><p>${razaoLabel}</p></div>
+        </div>
+        <div class="talao-row4">
+          <div class="talao-campo span4"><label>Mês(es) de referência</label><p>${mesesStr}</p></div>
+        </div>
+        <div class="talao-footer">
+          <div class="talao-valor"><label>Valor</label><p>${fmt(r.valor)}</p></div>
+          <div class="talao-assina"><span>Tesoureiro</span></div>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  const paginas=[];
+  for(let p=0;p<pares.length;p+=4){
+    const blocosPares=pares.slice(p,p+4);
+    const linhas=blocosPares.map(([a,b])=>`<div class="linha-taloes"><div class="col-talao">${talaoHtml(a)}</div><div class="divisoria"></div><div class="col-talao">${talaoHtml(b)}</div></div>`).join('');
+    paginas.push(`<div class="pagina">${linhas}</div>`);
+  }
+
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Talões — ${loja}</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Arial,sans-serif;background:#fff;color:#111}
+    .pagina{width:216mm;min-height:297mm;display:flex;flex-direction:column;page-break-after:always}
+    .linha-taloes{display:flex;flex:1;border-bottom:1px dashed #aaa}
+    .linha-taloes:last-child{border-bottom:none}
+    .col-talao{flex:1;padding:0}
+    .divisoria{width:1px;border-left:1px dashed #aaa}
+    .talao{height:100%;padding:8px 10px;display:flex;flex-direction:column;gap:5px}
+    .talao-vazio{background:#fafafa}
+    .talao-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+    .talao-loja-nome{font-size:8.5px;font-weight:700;letter-spacing:.03em}
+    .talao-loja-end{font-size:7px;color:#555;margin-top:1px}
+    .talao-num-box{text-align:right;min-width:55px;padding-left:8px}
+    .talao-num-label{font-size:7px;color:#777}
+    .talao-num-val{font-size:17px;font-weight:700;line-height:1.1}
+    .talao-num-ano{font-size:7px;color:#555}
+    .talao-body{border-top:0.5px solid #ddd;padding-top:5px;display:flex;flex-direction:column;gap:4px;flex:1}
+    .talao-row4{display:grid;grid-template-columns:repeat(4,1fr);gap:4px 8px}
+    .span2{grid-column:span 2}
+    .span4{grid-column:span 4}
+    .talao-campo label{font-size:7px;color:#777;display:block;white-space:nowrap}
+    .talao-campo p{font-size:8px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .talao-footer{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:4px}
+    .talao-valor label{font-size:7px;color:#777}
+    .talao-valor p{font-size:13px;font-weight:700}
+    .talao-assina{text-align:center;border-top:0.5px solid #999;padding-top:2px;min-width:110px}
+    .talao-assina span{font-size:7px;color:#777}
+    @media print{body{margin:0}@page{size:A4;margin:5mm}}
+  </style></head><body>${paginas.join('')}</body></html>`;
+}
+
+
 /* Regra: exibir apenas meses com doação registrada, incluindo pagamentos futuros/adiantados */
 function renderDoacoes(){
   const ano=S.config.ano;
@@ -2314,19 +2533,25 @@ function renderElTabela(){
       const mAno=typeof m==='object'?m.ano:r.ano;
       return`<span class="mes-tag" style="background:${MONTH_COLORS[mi]}22;color:${MONTH_COLORS[mi]}">${MESES_NOMES[mi]} ${mAno}</span>`;
     }).join(''):`<span style="color:rgba(255,255,255,.3);font-size:11px">${r.ano}</span>`;
-    tr.innerHTML=`<td class="center">${talaoDisplay}</td>
+    const razaoLabel=r.razao==='mensalidade'?'Mensalidade':r.razao==='doacao'?'Doação':r.razao==='taxa-gorn'?'Taxa GORN':r.razao;
+    const razaoChip=r.razao==='mensalidade'?'chip-mens':r.razao==='doacao'?'chip-doa':'chip-orange';
+    const impresso=r.impresso_em?`<span style="font-size:10px;color:var(--green)" title="Impresso em ${fmtDate(r.impresso_em?.split('T')[0])}">🖨️ ${fmtDate(r.impresso_em?.split('T')[0])}</span>`:`<span style="color:rgba(255,255,255,.2);font-size:11px">—</span>`;
+    const sel=elSelecionados.has(r.id);
+    tr.innerHTML=`<td class="center"><input type="checkbox" class="el-row-check" data-id="${r.id}" ${sel?'checked':''} onclick="elToggleCheck('${r.id}',this)" style="cursor:pointer"></td>
+      <td class="center">${talaoDisplay}</td>
       <td>${fmtDate(r.data)}</td><td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.irmao}</td>
       <td class="center sep"><span class="chip ${r.tipo==='pix'?'chip-pix':'chip-esp'}">${r.tipo==='pix'?'PIX':'Espécie'}</span></td>
       <td class="sep">${r.receb}</td>
-      <td class="center sep"><span class="chip ${r.razao==='mensalidade'?'chip-mens':'chip-doa'}">${r.razao==='mensalidade'?'Mensalidade':'Doação'}</span></td>
+      <td class="center sep"><span class="chip ${razaoChip}">${razaoLabel}</span></td>
       <td class="sep">${mHtml}</td>
       <td class="right sep-accent" style="font-weight:700;color:var(--green)">${fmt(r.valor)}</td>
+      <td class="center sep">${impresso}</td>
       <td class="center sep"><div class="action-btns"><button class="act-btn edit" onclick="elEditarRegistro('${r.id}')">✏️</button><button class="act-btn del" onclick="elExcluirRegistro('${r.id}')">✕</button></div></td>`;
     tbody.appendChild(tr);
   });
   // Linha total
   const trTot=document.createElement('tr');trTot.className='tfoot-row';
-  trTot.innerHTML=`<td colspan="7" style="text-align:right;font-size:11px;color:rgba(255,255,255,.5)">Total dos registros filtrados</td><td class="right sep-accent hl-purple">${fmt(totalEl)}</td><td class="sep"></td>`;
+  trTot.innerHTML=`<td colspan="8" style="text-align:right;font-size:11px;color:rgba(255,255,255,.5)">Total dos registros filtrados</td><td class="right sep-accent hl-purple">${fmt(totalEl)}</td><td class="sep"></td><td class="sep"></td>`;
   tbody.appendChild(trTot);
 }
 
@@ -2528,7 +2753,45 @@ function renderIrmaos(){
   });
 }
 
-/* ═══════════════ CONFIGURAÇÕES ═══════════════ */
+/* ═══════════════ USO DO SUPABASE ═══════════════ */
+async function carregarUsoSupabase(){
+  document.getElementById('supa-db-size').textContent='...';
+  document.getElementById('supa-total-rows').textContent='...';
+  try{
+    // Tamanho do banco via rpc
+    const{data:sz,error:er}=await db.rpc('get_db_size');
+    if(!er&&sz){
+      const bytes=parseInt(sz);
+      const mb=(bytes/1024/1024).toFixed(2);
+      const pct=Math.min((bytes/(500*1024*1024))*100,100).toFixed(1);
+      document.getElementById('supa-db-size').textContent=mb+' MB';
+      document.getElementById('supa-db-pct').textContent=pct+'% do limite';
+      document.getElementById('supa-pct-label').textContent=pct+'%';
+      const barra=document.getElementById('supa-barra');
+      const cor=pct<50?'var(--green)':pct<80?'var(--orange)':'var(--red)';
+      barra.style.width=pct+'%';barra.style.background=cor;
+      document.getElementById('supa-pct-label').style.color=cor;
+    }else{
+      // Fallback: usar pg_database_size via SQL direto
+      const{data:d2}=await db.from('config').select('id').limit(1);
+      document.getElementById('supa-db-size').textContent='< 5 MB';
+      document.getElementById('supa-db-pct').textContent='< 1% do limite';
+      document.getElementById('supa-pct-label').textContent='< 1%';
+      document.getElementById('supa-barra').style.width='1%';
+    }
+    // Contar total de registros
+    const tabelas=['irmaos','entradas_loja','saidas_loja','tronco_entradas','tronco_saidas','usuarios'];
+    const counts=await Promise.all(tabelas.map(t=>db.from(t).select('*',{count:'exact',head:true})));
+    const total=counts.reduce((s,r)=>s+(r.count||0),0);
+    document.getElementById('supa-total-rows').textContent=total.toLocaleString('pt-BR');
+    document.getElementById('supa-limite-sub').textContent='plano free · renova mensalmente';
+  }catch(e){
+    document.getElementById('supa-db-size').textContent='Erro';
+    document.getElementById('supa-db-pct').textContent='não foi possível consultar';
+    console.error('Erro ao consultar uso Supabase:',e);
+  }
+}
+
 function checkSenha(){
   if(document.getElementById('cfg-senha').value===S.config.senha){
     document.getElementById('config-lock-screen').style.display='none';
@@ -2540,6 +2803,7 @@ function checkSenha(){
     // Ocultar seção usuários para não-admin
     document.getElementById('cfg-section-usuarios').style.display=SESSAO.perfil==='admin'?'':'none';
     buildCfgMeses();buildCfgIrIrregMes();renderCfgIrmaos();renderCfgUsuarios();
+    carregarUsoSupabase();
   }else{document.getElementById('cfg-erro').style.display='block';setTimeout(()=>document.getElementById('cfg-erro').style.display='none',2000);}
 }
 
@@ -2799,7 +3063,7 @@ async function init(){
   populateIrmaoSelect();
   buildMesesChips(document.getElementById('el-meses-chips'),elCheckBtn);
   aplicarPerfil();
-  renderDash();renderIrmaos();renderMensalidades();renderDoacoes();renderElTabela();renderSlTabela();renderTrTabela();renderTsTabela();
+  renderDash();renderIrmaos();renderMensalidades();renderDoacoes();renderTaxasGorn();renderElTabela();renderSlTabela();renderTrTabela();renderTsTabela();
   loading.classList.add('hidden');loading.classList.remove('active');setTimeout(()=>{},500);
   toast(`Bem-vindo, ${SESSAO.usuario?.nome?.split(' ')[0]||''}! ✓`,'ok',2500);
 }
