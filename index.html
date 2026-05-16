@@ -286,7 +286,11 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
 .chip-mensalista{background:rgba(34,211,160,.12);color:var(--green)}
 .chip-remido{background:rgba(96,165,250,.12);color:var(--blue)}
 .chip-honorario{background:rgba(245,158,11,.12);color:var(--orange)}
+.chip-placetado{background:rgba(168,85,247,.15);color:#a855f7}
 .chip-irregular{background:rgba(239,68,68,.12);color:var(--red)}
+.chip-ap{background:rgba(251,191,36,.15);color:#d97706}
+.chip-co{background:rgba(14,165,233,.15);color:#0284c7}
+.chip-me{background:rgba(16,185,129,.15);color:#059669}
 .mes-tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:20px;font-weight:600;margin:1px}
 
 /* MONTH TH */
@@ -824,6 +828,7 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
     <div class="tbl-top">
       <div class="tbl-title"><div class="ft-bar" style="background:var(--violet2);width:3px;height:13px;border-radius:2px"></div>Controle Mensal</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input class="tbl-search" id="mens-search" placeholder="🔍 Pesquisar irmão..." oninput="renderMensalidades()" style="max-width:200px">
         <button class="btn btn-ghost btn-sm" id="mens-filter-inad-btn" onclick="toggleMensInad()">⚠️ Só inadimplentes</button>
         <button class="btn btn-excel btn-sm" onclick="exportExcel('mens')">📥 Excel</button>
         <div class="count-badge" style="background:rgba(139,92,246,.15);color:var(--violet2)" id="m-badge">—</div>
@@ -837,7 +842,11 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
     <div class="sec-div">Doações</div>
     <div class="tbl-top">
       <div class="tbl-title"><div class="ft-bar" style="background:var(--pink);width:3px;height:13px;border-radius:2px"></div>Registro de Doações</div>
-      <div style="display:flex;gap:8px"><button class="btn btn-excel btn-sm" onclick="exportExcel('doacoes')">📥 Excel</button><div class="count-badge" style="background:rgba(236,72,153,.12);color:var(--pink)" id="d-badge">—</div></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input class="tbl-search" id="doa-search" placeholder="🔍 Pesquisar irmão..." oninput="renderDoacoes()" style="max-width:200px">
+        <button class="btn btn-excel btn-sm" onclick="exportExcel('doacoes')">📥 Excel</button>
+        <div class="count-badge" style="background:rgba(236,72,153,.12);color:var(--pink)" id="d-badge">—</div>
+      </div>
     </div>
     <div class="tbl-wrap"><table><thead><tr id="doa-thead-row"><th style="width:175px">Irmão</th></tr></thead><tbody id="doa-tbody"></tbody><tfoot><tr class="tfoot-row" id="doa-tfoot"><td>Total arrecadado</td></tr></tfoot></table></div>
   </div>
@@ -847,7 +856,11 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
     <div class="sec-div">Taxas GORN</div>
     <div class="tbl-top">
       <div class="tbl-title"><div class="ft-bar" style="background:#C9A84C;width:3px;height:13px;border-radius:2px"></div>Registro de Taxas GORN</div>
-      <div style="display:flex;gap:8px"><button class="btn btn-excel btn-sm" onclick="exportExcel('taxas-gorn')">📥 Excel</button><div class="count-badge" style="background:rgba(201,168,76,.15);color:#C9A84C" id="tg-badge">—</div></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input class="tbl-search" id="tg-search" placeholder="🔍 Pesquisar irmão..." oninput="renderTaxasGorn()" style="max-width:200px">
+        <button class="btn btn-excel btn-sm" onclick="exportExcel('taxas-gorn')">📥 Excel</button>
+        <div class="count-badge" style="background:rgba(201,168,76,.15);color:#C9A84C" id="tg-badge">—</div>
+      </div>
     </div>
     <div class="tbl-wrap"><table><thead><tr id="tg-thead-row"><th style="width:175px">Irmão</th></tr></thead><tbody id="tg-tbody"></tbody><tfoot><tr class="tfoot-row" id="tg-tfoot"><td>Total arrecadado</td></tr></tfoot></table></div>
   </div>
@@ -1082,7 +1095,11 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
     <p style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:12px">Visualização. Para gerenciar acesse <strong style="color:var(--violet2);cursor:pointer" onclick="navigateTo('config')">Configurações</strong>.</p>
     <div class="tbl-top">
       <div class="tbl-title"><div class="ft-bar" style="background:var(--blue);width:3px;height:13px;border-radius:2px"></div>Lista de Irmãos</div>
-      <div style="display:flex;gap:8px"><button class="btn btn-excel btn-sm" onclick="exportExcel('irmaos')">📥 Excel</button><div class="count-badge" style="background:rgba(96,165,250,.12);color:var(--blue)" id="ir-badge">0</div></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input class="tbl-search" id="ir-search" placeholder="🔍 Pesquisar irmão..." oninput="renderIrmaos()" style="max-width:200px">
+        <button class="btn btn-excel btn-sm" onclick="exportExcel('irmaos')">📥 Excel</button>
+        <div class="count-badge" style="background:rgba(96,165,250,.12);color:var(--blue)" id="ir-badge">0</div>
+      </div>
     </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>Nome</th><th style="width:130px" class="center sep">Status</th><th style="width:130px" class="center sep">Grau</th><th style="width:140px" class="center sep">Irregular desde</th></tr></thead>
@@ -1189,14 +1206,42 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
           <div class="fields-grid">
             <div class="field grow"><label>Nome completo</label><input type="text" id="cfg-ir-nome" placeholder="Nome do irmão" oninput="cfgIrCheckBtn()"></div>
             <div class="field w140"><label>Status</label>
-              <select id="cfg-ir-status" onchange="cfgIrStatusChange()"><option value="">— status —</option><option value="mensalista">Mensalista</option><option value="remido">Remido</option><option value="honorario">Honorário</option><option value="irregular">Irregular</option></select>
+              <select id="cfg-ir-status" onchange="cfgIrStatusChange()"><option value="">— status —</option><option value="mensalista">Mensalista</option><option value="remido">Remido</option><option value="honorario">Honorário</option><option value="placetado">Placetado</option><option value="irregular">Irregular</option></select>
             </div>
             <div class="field w140"><label>Grau</label>
               <select id="cfg-ir-grau" onchange="cfgIrCheckBtn()"><option value="">— grau —</option><option value="aprendiz">Aprendiz</option><option value="companheiro">Companheiro</option><option value="mestre">Mestre</option></select>
             </div>
-            <div class="field w120" id="cfg-ir-irreg-wrap" style="display:none">
-              <label>Irregular desde</label>
-              <select id="cfg-ir-irreg-mes" onchange="cfgIrCheckBtn()"><option value="">— mês —</option></select>
+            <div class="field w140" id="cfg-ir-acao-wrap" style="display:none">
+              <label>Ação</label>
+              <select id="cfg-ir-acao" onchange="cfgIrAcaoChange()">
+                <option value="">— selecione —</option>
+                <option value="regularizacao">Regularização</option>
+                <option value="kit-placet">Kit Placet</option>
+              </select>
+            </div>
+            <div class="field w140" id="cfg-ir-regular-wrap" style="display:none">
+              <label>Regular desde</label>
+              <select id="cfg-ir-regular-mes" onchange="cfgIrCheckBtn()">
+                <option value="">— mês —</option>
+                <option value="0">Janeiro</option><option value="1">Fevereiro</option>
+                <option value="2">Março</option><option value="3">Abril</option>
+                <option value="4">Maio</option><option value="5">Junho</option>
+                <option value="6">Julho</option><option value="7">Agosto</option>
+                <option value="8">Setembro</option><option value="9">Outubro</option>
+                <option value="10">Novembro</option><option value="11">Dezembro</option>
+              </select>
+            </div>
+            <div class="field w160" id="cfg-ir-placet-wrap" style="display:none">
+              <label>Kit Placet desde</label>
+              <select id="cfg-ir-placet-mes" onchange="cfgIrCheckBtn()">
+                <option value="">— mês —</option>
+                <option value="0">Janeiro</option><option value="1">Fevereiro</option>
+                <option value="2">Março</option><option value="3">Abril</option>
+                <option value="4">Maio</option><option value="5">Junho</option>
+                <option value="6">Julho</option><option value="7">Agosto</option>
+                <option value="8">Setembro</option><option value="9">Outubro</option>
+                <option value="10">Novembro</option><option value="11">Dezembro</option>
+              </select>
             </div>
             <div class="field w140" id="cfg-ir-reg-wrap" style="display:none">
               <label>Data de regularização</label>
@@ -1222,7 +1267,7 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
         </div>
         <div class="tbl-filters" style="margin-bottom:8px"><input class="tbl-search" id="cfg-ir-search" placeholder="🔍 Pesquisar irmão..." oninput="renderCfgIrmaos()"></div>
         <div class="tbl-wrap"><table>
-          <thead><tr><th>Nome</th><th style="width:130px" class="center sep">Status</th><th style="width:130px" class="center sep">Grau</th><th style="width:150px" class="center sep">Irregular desde</th><th style="width:130px" class="center sep">Mês inicial</th><th style="width:70px" class="center sep">Ações</th></tr></thead>
+          <thead><tr><th>Nome</th><th style="width:120px" class="center sep">Status</th><th style="width:110px" class="center sep">Grau</th><th style="width:110px" class="center sep">Regular desde</th><th style="width:120px" class="center sep">Irregular desde</th><th style="width:120px" class="center sep">Kit Placet desde</th><th style="width:130px" class="center sep">Mês inicial mens.</th><th style="width:70px" class="center sep">Ações</th></tr></thead>
           <tbody id="cfg-irmaos-tbody"></tbody>
         </table></div>
       </div>
@@ -1370,8 +1415,8 @@ const CAT_LABEL={admin:'Administrativo',agape:'Ágape',caern:'CAERN',cosern:'COS
 const DEST_LABEL={lar:'Lar da Vovozinha',ce:'Centro Espírita',outros:'Outros'};
 const SESSAO_LABEL={aprendiz:'Aprendiz',companheiro:'Companheiro',mestre:'Mestre',magna:'Magna Pública'};
 const SESSAO_CHIP={aprendiz:'chip-ap',companheiro:'chip-co',mestre:'chip-me',magna:'chip-mp'};
-const STATUS_LABEL={mensalista:'Mensalista',remido:'Remido',honorario:'Honorário',irregular:'Irregular'};
-const STATUS_CHIP={mensalista:'chip-mensalista',remido:'chip-remido',honorario:'chip-honorario',irregular:'chip-irregular'};
+const STATUS_LABEL={mensalista:'Mensalista',remido:'Remido',honorario:'Honorário',placetado:'Placetado',irregular:'Irregular'};
+const STATUS_CHIP={mensalista:'chip-mensalista',remido:'chip-remido',honorario:'chip-honorario',placetado:'chip-placetado',irregular:'chip-irregular'};
 const GRAU_LABEL={aprendiz:'Aprendiz',companheiro:'Companheiro',mestre:'Mestre'};
 const GRAU_CHIP={aprendiz:'chip-ap',companheiro:'chip-co',mestre:'chip-me'};
 
@@ -1406,8 +1451,8 @@ function animBarPct(id,v){const el=document.getElementById(id);if(el)el.textCont
 function hexAlpha(hex,a){const s=hex.replace('#','');return`rgba(${parseInt(s.slice(0,2),16)},${parseInt(s.slice(2,4),16)},${parseInt(s.slice(4,6),16)},${a})`;}
 
 function irmaosOrdenados(){
-  // Ordem: Mensalista → Remido → Honorário → Irregular; dentro de cada grupo: A→Z
-  const ord={mensalista:0,remido:1,honorario:2,irregular:3};
+  // Ordem: Mensalista → Remido → Honorário → Placetado → Irregular; dentro de cada grupo: A→Z
+  const ord={mensalista:0,remido:1,honorario:2,placetado:3,irregular:4};
   return[...S.irmaos].sort((a,b)=>{
     const da=ord[a.status]??9,db2=ord[b.status]??9;
     if(da!==db2)return da-db2;
@@ -1416,10 +1461,19 @@ function irmaosOrdenados(){
 }
 function getMensVal(mi){return S.config.mens_val_mes[mi]||200;}
 function devePargarMes(ir,mi){
-  // Verifica mês inicial de cobrança (para irmãos novos/regularizados)
+  // Verifica mês inicial de cobrança
   if(ir.mes_inicial!==null&&ir.mes_inicial!==undefined&&mi<parseInt(ir.mes_inicial))return false;
   if(ir.status==='mensalista')return true;
-  if(ir.status==='irregular'){if(ir.irregular_desde===null||ir.irregular_desde===undefined)return true;return mi<ir.irregular_desde;}
+  // Irregular: cobrado até o mês anterior ao irregular_desde
+  if(ir.status==='irregular'){
+    if(ir.irregular_desde===null||ir.irregular_desde===undefined)return false;
+    return mi<ir.irregular_desde;
+  }
+  // Placetado: cobrado até o mês anterior ao kit_placet_desde
+  if(ir.status==='placetado'){
+    if(ir.kit_placet_desde===null||ir.kit_placet_desde===undefined)return false;
+    return mi<ir.kit_placet_desde;
+  }
   return false;
 }
 function mesesComDados(registros,dateFn){
@@ -1460,7 +1514,7 @@ async function dbLoad(){
       S.config.saldo_ant_loja=parseFloat(S.config.saldo_ant_loja)||0;
       S.config.saldo_ant_tronco=parseFloat(S.config.saldo_ant_tronco)||0;
     }
-    S.irmaos=irm.data||[];
+    S.irmaos=(irm.data||[]).map(r=>({...r,regular_desde:r.regular_desde??null,kit_placet_desde:r.kit_placet_desde??null}));
     S.entradasLoja=(el.data||[]).map(r=>({...r,ano:getAno(r.data),mesesRef:r.meses_ref||[],receb:r.recebedor,razao:r.razao,tipo:r.tipo,irmao:r.irmao,valor:parseFloat(r.valor),talao:r.talao===0||r.talao==='0'?'S/N':r.talao,impresso_em:r.impresso_em||null}));
     S.saidasLoja=(sl.data||[]).map(r=>({...r,cat:r.categoria,agapeTipo:r.agape_tipo,desc:r.descricao,fotos:r.fotos||[],valor:parseFloat(r.valor)}));
     S.troncoEntradas=(tr.data||[]).map(r=>({...r,ano:getAno(r.data),sessao:r.sessao,qtd:r.qtd,total:parseFloat(r.total),esp:parseFloat(r.esp||0),pix:parseFloat(r.pix||0),qtdpix:r.qtdpix||0,magna:r.magna}));
@@ -2002,7 +2056,8 @@ function renderMensalidades(){
   document.getElementById('m-pag').textContent=pagaramSet.size+' irmãos';document.getElementById('m-pag-sub').textContent=fmt(totalArr)+' arrecadados';
   document.getElementById('m-inad').textContent=inadSet.size+' irmãos';document.getElementById('m-inad-sub').textContent=inadSet.size>0?'com mês em aberto':'todos em dia';
 
-  const listaFinal=_mensShowInad?ordenados.filter(ir=>inadSet.has(ir.nome)):ordenados;
+  const q=(document.getElementById('mens-search')||{}).value||'';
+  const listaFinal=_mensShowInad?ordenados.filter(ir=>inadSet.has(ir.nome)&&(!q||ir.nome.toLowerCase().includes(q.toLowerCase()))):ordenados.filter(ir=>!q||ir.nome.toLowerCase().includes(q.toLowerCase()));
   document.getElementById('m-badge').textContent=listaFinal.length+' irmão(s)';
 
   // Montar cabeçalho
@@ -2118,7 +2173,8 @@ function renderTaxasGorn(){
   const meses=[...new Set(ent.map(r=>getMesIdx(r.data)))].sort((a,b)=>a-b);
   const taxaMap={};const colTotals=Array(12).fill(0);
   ent.forEach(r=>{const mi=getMesIdx(r.data);if(!taxaMap[r.irmao])taxaMap[r.irmao]={};taxaMap[r.irmao][mi]=(taxaMap[r.irmao][mi]||0)+r.valor;colTotals[mi]+=r.valor;});
-  const nomes=[...new Set(ent.map(r=>r.irmao))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const qTg=(document.getElementById('tg-search')||{}).value||'';
+  const nomes=[...new Set(ent.map(r=>r.irmao))].filter(n=>!qTg||n.toLowerCase().includes(qTg.toLowerCase())).sort((a,b)=>a.localeCompare(b,'pt-BR'));
   document.getElementById('tg-badge').textContent=nomes.length+' pagador'+(nomes.length!==1?'es':'');
   // Cabeçalho
   const theadRow=document.getElementById('tg-thead-row');theadRow.innerHTML='<th style="width:175px">Irmão</th>';
@@ -2279,7 +2335,8 @@ function renderDoacoes(){
   const doaMap={};const colTotals=Array(12).fill(0);
   ent.forEach(r=>{const mi=getMesIdx(r.data);if(mi<0)return;if(!doaMap[r.irmao])doaMap[r.irmao]={};doaMap[r.irmao][mi]=(doaMap[r.irmao][mi]||0)+r.valor;colTotals[mi]+=r.valor;});
   // Apenas irmãos que realizaram doações
-  const ordenados=[...new Set(ent.map(r=>r.irmao))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const q=(document.getElementById('doa-search')||{}).value||'';
+  const ordenados=[...new Set(ent.map(r=>r.irmao))].filter(n=>!q||n.toLowerCase().includes(q.toLowerCase())).sort((a,b)=>a.localeCompare(b,'pt-BR'));
   document.getElementById('d-badge').textContent=ordenados.length+' doador'+(ordenados.length!==1?'es':'');
   const theadRow=document.getElementById('doa-thead-row');theadRow.innerHTML='<th style="width:175px">Irmão</th>';
   if(!meses.length){document.getElementById('doa-tbody').innerHTML='<tr class="empty-row"><td colspan="2">Nenhuma doação registrada.</td></tr>';document.getElementById('doa-tfoot').innerHTML='';return;}
@@ -2838,14 +2895,21 @@ function buildCfgIrIrregMes(){
 }
 function cfgIrStatusChange(){
   const v=document.getElementById('cfg-ir-status').value;
-  document.getElementById('cfg-ir-irreg-wrap').style.display=v==='irregular'?'flex':'none';
+  // Ação aparece para irregular e placetado
+  document.getElementById('cfg-ir-acao-wrap').style.display=(v==='irregular'||v==='placetado')?'flex':'none';
+  // Data de regularização só para mensalista
   document.getElementById('cfg-ir-reg-wrap').style.display=v==='mensalista'?'flex':'none';
   if(v!=='mensalista'){document.getElementById('cfg-ir-data-reg').value='';document.getElementById('cfg-ir-mes-ini-wrap').style.display='none';}
+  // Limpar ação ao mudar status
+  document.getElementById('cfg-ir-acao').value='';
+  document.getElementById('cfg-ir-regular-wrap').style.display='none';
+  document.getElementById('cfg-ir-placet-wrap').style.display='none';
   cfgIrCheckBtn();
 }
-function cfgIrDataRegChange(){
-  const val=document.getElementById('cfg-ir-data-reg').value;
-  document.getElementById('cfg-ir-mes-ini-wrap').style.display=val?'flex':'none';
+function cfgIrAcaoChange(){
+  const acao=document.getElementById('cfg-ir-acao').value;
+  document.getElementById('cfg-ir-regular-wrap').style.display=acao==='regularizacao'?'flex':'none';
+  document.getElementById('cfg-ir-placet-wrap').style.display=acao==='kit-placet'?'flex':'none';
   cfgIrCheckBtn();
 }
 function cfgIrCheckBtn(){const nome=document.getElementById('cfg-ir-nome').value.trim();const status=document.getElementById('cfg-ir-status').value;const grau=document.getElementById('cfg-ir-grau').value;const irregOk=status!=='irregular'||document.getElementById('cfg-ir-irreg-mes').value!=='';document.getElementById('cfg-ir-btn').disabled=!(nome&&status&&grau&&irregOk);}
@@ -2853,22 +2917,23 @@ async function cfgSalvarIrmao(){
   const nome=document.getElementById('cfg-ir-nome').value.trim();
   const status=document.getElementById('cfg-ir-status').value;
   const grau=document.getElementById('cfg-ir-grau').value;
-  const irregular_desde=status==='irregular'?parseInt(document.getElementById('cfg-ir-irreg-mes').value):null;
+  const acao=document.getElementById('cfg-ir-acao').value;
+  const irregular_desde=status==='irregular'?parseInt(document.getElementById('cfg-ir-irreg-mes').value)||null:null;
+  const regular_desde=acao==='regularizacao'?parseInt(document.getElementById('cfg-ir-regular-mes').value)||null:null;
+  const kit_placet_desde=acao==='kit-placet'?parseInt(document.getElementById('cfg-ir-placet-mes').value)||null:null;
   const data_reg=document.getElementById('cfg-ir-data-reg').value||null;
   const mes_inicial=document.getElementById('cfg-ir-mes-ini').value!==''?parseInt(document.getElementById('cfg-ir-mes-ini').value):null;
   try{
     if(S.cfgIrEditId){
-      await dbUpdate('irmaos',S.cfgIrEditId,{nome,status,grau,irregular_desde,data_reg,mes_inicial});
+      await dbUpdate('irmaos',S.cfgIrEditId,{nome,status,grau,irregular_desde,regular_desde,kit_placet_desde,data_reg,mes_inicial});
       const idx=S.irmaos.findIndex(r=>r.id===S.cfgIrEditId);
-      if(idx>=0)S.irmaos[idx]={...S.irmaos[idx],nome,status,grau,irregular_desde,data_reg,mes_inicial};
+      if(idx>=0)S.irmaos[idx]={...S.irmaos[idx],nome,status,grau,irregular_desde,regular_desde,kit_placet_desde,data_reg,mes_inicial};
       S.cfgIrEditId=null;document.getElementById('cfg-ir-form-title').textContent='Novo Irmão';document.getElementById('cfg-ir-btn').textContent='＋ Cadastrar';document.getElementById('cfg-ir-cancel-btn').style.display='none';toast('Irmão atualizado ✓');
     }else{
-      const{data:row,error}=await db.from('irmaos').insert({nome,status,grau,irregular_desde,data_reg,mes_inicial}).select().single();if(error)throw error;S.irmaos.push(row);toast('Irmão cadastrado ✓');
+      const{data:row,error}=await db.from('irmaos').insert({nome,status,grau,irregular_desde,regular_desde,kit_placet_desde,data_reg,mes_inicial}).select().single();if(error)throw error;S.irmaos.push(row);toast('Irmão cadastrado ✓');
     }
-    ['cfg-ir-nome','cfg-ir-status','cfg-ir-grau','cfg-ir-irreg-mes','cfg-ir-data-reg','cfg-ir-mes-ini'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('cfg-ir-irreg-wrap').style.display='none';
-    document.getElementById('cfg-ir-reg-wrap').style.display='none';
-    document.getElementById('cfg-ir-mes-ini-wrap').style.display='none';
+    ['cfg-ir-nome','cfg-ir-status','cfg-ir-grau','cfg-ir-irreg-mes','cfg-ir-acao','cfg-ir-regular-mes','cfg-ir-placet-mes','cfg-ir-data-reg','cfg-ir-mes-ini'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    ['cfg-ir-irreg-wrap','cfg-ir-acao-wrap','cfg-ir-regular-wrap','cfg-ir-placet-wrap','cfg-ir-reg-wrap','cfg-ir-mes-ini-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     document.getElementById('cfg-ir-btn').disabled=true;
     renderCfgIrmaos();renderIrmaos();populateIrmaoSelect();
   }catch(e){toast('Erro: '+e.message,'err');}
@@ -2876,21 +2941,28 @@ async function cfgSalvarIrmao(){
 function cfgEditarIrmao(id){
   const ir=S.irmaos.find(x=>x.id===id);if(!ir)return;
   S.cfgIrEditId=id;document.getElementById('cfg-ir-form-title').textContent='Editar Irmão';document.getElementById('cfg-ir-btn').textContent='💾 Salvar';document.getElementById('cfg-ir-cancel-btn').style.display='';
-  document.getElementById('cfg-ir-nome').value=ir.nome;document.getElementById('cfg-ir-status').value=ir.status;document.getElementById('cfg-ir-grau').value=ir.grau;
+  document.getElementById('cfg-ir-nome').value=ir.nome;
+  document.getElementById('cfg-ir-status').value=ir.status;
+  document.getElementById('cfg-ir-grau').value=ir.grau;
   document.getElementById('cfg-ir-irreg-mes').value=ir.irregular_desde!=null?ir.irregular_desde:'';
-  document.getElementById('cfg-ir-irreg-wrap').style.display=ir.status==='irregular'?'flex':'none';
   document.getElementById('cfg-ir-data-reg').value=ir.data_reg||'';
-  document.getElementById('cfg-ir-reg-wrap').style.display=ir.status==='mensalista'?'flex':'none';
   document.getElementById('cfg-ir-mes-ini').value=ir.mes_inicial!=null?ir.mes_inicial:'';
   document.getElementById('cfg-ir-mes-ini-wrap').style.display=ir.data_reg?'flex':'none';
+  // Ação
+  const acao=ir.regular_desde!=null?'regularizacao':ir.kit_placet_desde!=null?'kit-placet':'';
+  document.getElementById('cfg-ir-acao').value=acao;
+  document.getElementById('cfg-ir-acao-wrap').style.display=(ir.status==='irregular'||ir.status==='placetado')?'flex':'none';
+  document.getElementById('cfg-ir-regular-mes').value=ir.regular_desde!=null?ir.regular_desde:'';
+  document.getElementById('cfg-ir-regular-wrap').style.display=acao==='regularizacao'?'flex':'none';
+  document.getElementById('cfg-ir-placet-mes').value=ir.kit_placet_desde!=null?ir.kit_placet_desde:'';
+  document.getElementById('cfg-ir-placet-wrap').style.display=acao==='kit-placet'?'flex':'none';
+  document.getElementById('cfg-ir-reg-wrap').style.display=ir.status==='mensalista'?'flex':'none';
   cfgIrCheckBtn();
 }
 function cfgCancelarEdicaoIrmao(){
   S.cfgIrEditId=null;document.getElementById('cfg-ir-form-title').textContent='Novo Irmão';document.getElementById('cfg-ir-btn').textContent='＋ Cadastrar';document.getElementById('cfg-ir-cancel-btn').style.display='none';
-  ['cfg-ir-nome','cfg-ir-status','cfg-ir-grau','cfg-ir-irreg-mes','cfg-ir-data-reg','cfg-ir-mes-ini'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('cfg-ir-irreg-wrap').style.display='none';
-  document.getElementById('cfg-ir-reg-wrap').style.display='none';
-  document.getElementById('cfg-ir-mes-ini-wrap').style.display='none';
+  ['cfg-ir-nome','cfg-ir-status','cfg-ir-grau','cfg-ir-irreg-mes','cfg-ir-acao','cfg-ir-regular-mes','cfg-ir-placet-mes','cfg-ir-data-reg','cfg-ir-mes-ini'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['cfg-ir-irreg-wrap','cfg-ir-acao-wrap','cfg-ir-regular-wrap','cfg-ir-placet-wrap','cfg-ir-reg-wrap','cfg-ir-mes-ini-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   document.getElementById('cfg-ir-btn').disabled=true;
 }
 function cfgExcluirIrmao(id){
@@ -2903,13 +2975,18 @@ function renderCfgIrmaos(){
   tbody.innerHTML='';
   lista.forEach(ir=>{
     const tr=document.createElement('tr');if(ir.status==='irregular')tr.classList.add('row-irregular');
+    if(ir.status==='placetado')tr.style.opacity='0.75';
     const ini=ir.nome.split(' ').filter(Boolean).map(p=>p[0]).slice(0,2).join('').toUpperCase();
     const irregDesde=ir.irregular_desde!=null?`${MESES_NOMES[ir.irregular_desde]} ${S.config.ano}`:'—';
-    const mesIni=ir.mes_inicial!=null?MESES_NOMES[ir.mes_inicial]+(ir.data_reg?` (reg: ${fmtDate(ir.data_reg)})`:''):'—';
+    const regularDesde=ir.regular_desde!=null?`${MESES_NOMES[ir.regular_desde]} ${S.config.ano}`:'—';
+    const placetDesde=ir.kit_placet_desde!=null?`${MESES_NOMES[ir.kit_placet_desde]} ${S.config.ano}`:'—';
+    const mesIni=ir.mes_inicial!=null?MESES_NOMES[ir.mes_inicial]:'—';
     tr.innerHTML=`<td><span class="irmao-avatar" style="width:24px;height:24px;font-size:10px">${ini}</span>${ir.nome}</td>
       <td class="center sep"><span class="chip ${STATUS_CHIP[ir.status]}">${STATUS_LABEL[ir.status]}</span></td>
       <td class="center sep"><span class="chip ${GRAU_CHIP[ir.grau]}">${GRAU_LABEL[ir.grau]}</span></td>
+      <td class="center sep" style="font-size:11px;color:rgba(255,255,255,.5)">${regularDesde}</td>
       <td class="center sep" style="font-size:11px;color:rgba(255,255,255,.5)">${irregDesde}</td>
+      <td class="center sep" style="font-size:11px;color:rgba(255,255,255,.5)">${placetDesde}</td>
       <td class="center sep" style="font-size:11px;color:rgba(255,255,255,.5)">${mesIni}</td>
       <td class="center sep"><div class="action-btns"><button class="act-btn edit" onclick="cfgEditarIrmao('${ir.id}')">✏️</button><button class="act-btn del" onclick="cfgExcluirIrmao('${ir.id}')">✕</button></div></td>`;
     tbody.appendChild(tr);
@@ -2937,16 +3014,44 @@ function exportExcel(tipo){
   else if(tipo==='ts'){nome=`Tronco_Saidas_${ano}`;rows=[['Data','Origem','Destino','Descrição','Valor']];filterByTbl(S.troncoSaidas,'ts',r=>r.data).forEach(r=>rows.push([fmtDate(r.data),r.origem,DEST_LABEL[r.cat]||r.cat,r.desc||'—',r.valor]));}
   else if(tipo==='mens'){
     nome=`Mensalidades_${ano}`;
-    const ent=S.entradasLoja.filter(r=>r.ano===ano&&r.razao==='mensalidade');
-    const mesesComReg=new Set();ent.forEach(r=>(r.mesesRef||[]).forEach(mi=>mesesComReg.add(mi)));
+    const ent=S.entradasLoja.filter(r=>r.razao==='mensalidade');
+    const mesesComReg=new Set();
+    ent.forEach(r=>(r.mesesRef||[]).forEach(m=>{
+      const mAno=typeof m==='object'?(m.ano||r.ano):r.ano;
+      const mi=typeof m==='object'?m.mi:m;
+      if(mAno===ano)mesesComReg.add(mi);
+    }));
     const curMes=new Date().getMonth();const maiorMes=mesesComReg.size>0?Math.max(curMes,...mesesComReg):curMes;
     const meses=[...Array(maiorMes+1).keys()];
-    const pagMap={};ent.forEach(r=>{(r.mesesRef||[]).forEach(mi=>{if(!pagMap[r.irmao])pagMap[r.irmao]={};pagMap[r.irmao][mi]=(pagMap[r.irmao][mi]||0)+getMensVal(mi);});});
-    rows=[['Irmão','Status',...meses.map(mi=>MESES_NOMES[mi]),'Total']];
-    irmaosOrdenados().forEach(ir=>{let tot=0;const linha=[ir.nome,STATUS_LABEL[ir.status]];meses.forEach(mi=>{const v=(pagMap[ir.nome]||{})[mi]||0;linha.push(v>0?v:'');tot+=v;});linha.push(tot);rows.push(linha);});
+    const pagMap={};
+    ent.forEach(r=>{(r.mesesRef||[]).forEach(m=>{
+      const mAno=typeof m==='object'?(m.ano||r.ano):r.ano;
+      const mi=typeof m==='object'?m.mi:m;
+      if(mAno===ano){if(!pagMap[r.irmao])pagMap[r.irmao]={};pagMap[r.irmao][mi]=(pagMap[r.irmao][mi]||0)+getMensVal(mi);}
+    });});
+    rows=[['Irmão','Status',...meses.map(mi=>MESES_NOMES[mi]+' '+ano),'Total']];
+    const q=(document.getElementById('mens-search')||{}).value||'';
+    irmaosOrdenados().filter(ir=>!q||ir.nome.toLowerCase().includes(q.toLowerCase())).forEach(ir=>{
+      let tot=0;const linha=[ir.nome,STATUS_LABEL[ir.status]];
+      meses.forEach(mi=>{const v=(pagMap[ir.nome]||{})[mi]||0;linha.push(v>0?v:'');tot+=v;});
+      linha.push(tot);rows.push(linha);
+    });
   }
-  else if(tipo==='doacoes'){nome=`Doacoes_${ano}`;rows=[['Irmão','Mês','Valor']];S.entradasLoja.filter(r=>r.ano===ano&&r.razao==='doacao').forEach(r=>rows.push([r.irmao,MESES_NOMES[getMesIdx(r.data)]||'—',r.valor]));}
-  else if(tipo==='irmaos'){nome='Irmaos';rows=[['Nome','Status','Grau','Irregular desde']];irmaosOrdenados().forEach(ir=>rows.push([ir.nome,STATUS_LABEL[ir.status],GRAU_LABEL[ir.grau],ir.irregular_desde!=null?MESES_NOMES[ir.irregular_desde]+' '+S.config.ano:'—']));}
+  else if(tipo==='doacoes'){
+    nome=`Doacoes_${ano}`;rows=[['Irmão','Mês','Valor']];
+    const q=(document.getElementById('doa-search')||{}).value||'';
+    S.entradasLoja.filter(r=>r.ano===ano&&r.razao==='doacao'&&(!q||r.irmao.toLowerCase().includes(q.toLowerCase()))).forEach(r=>rows.push([r.irmao,MESES_NOMES[getMesIdx(r.data)]||'—',r.valor]));
+  }
+  else if(tipo==='taxas-gorn'){
+    nome=`Taxas_GORN_${ano}`;rows=[['Irmão','Mês','Valor']];
+    const q=(document.getElementById('tg-search')||{}).value||'';
+    S.entradasLoja.filter(r=>r.ano===ano&&r.razao==='taxa-gorn'&&(!q||r.irmao.toLowerCase().includes(q.toLowerCase()))).forEach(r=>rows.push([r.irmao,MESES_NOMES[getMesIdx(r.data)]||'—',r.valor]));
+  }
+  else if(tipo==='irmaos'){
+    nome='Irmaos';rows=[['Nome','Status','Grau','Irregular desde']];
+    const q=(document.getElementById('ir-search')||{}).value||'';
+    irmaosOrdenados().filter(ir=>!q||ir.nome.toLowerCase().includes(q.toLowerCase())).forEach(ir=>rows.push([ir.nome,STATUS_LABEL[ir.status],GRAU_LABEL[ir.grau],ir.irregular_desde!=null?MESES_NOMES[ir.irregular_desde]+' '+S.config.ano:'—']));
+  }
   const ws=XLSX.utils.aoa_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,nome.slice(0,31));XLSX.writeFile(wb,nome+'.xlsx');
 }
 
