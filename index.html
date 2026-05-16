@@ -1232,14 +1232,10 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
                 <option value="10">Novembro</option><option value="11">Dezembro</option>
               </select>
             </div>
-            <div class="field w140" id="cfg-ir-reg-wrap" style="display:none">
-              <label>Data de regularização</label>
-              <input type="date" id="cfg-ir-data-reg" onchange="cfgIrDataRegChange()">
-            </div>
-            <div class="field w160" id="cfg-ir-mes-ini-wrap" style="display:none">
-              <label>Mês inicial de cobrança</label>
+            <div class="field w160">
+              <label>Mês inicial de cobrança <span style="color:rgba(255,255,255,.3);font-size:10px">(opcional)</span></label>
               <select id="cfg-ir-mes-ini" onchange="cfgIrCheckBtn()">
-                <option value="">— mês —</option>
+                <option value="">— todos os meses —</option>
                 <option value="0">Janeiro</option><option value="1">Fevereiro</option>
                 <option value="2">Março</option><option value="3">Abril</option>
                 <option value="4">Maio</option><option value="5">Junho</option>
@@ -2895,8 +2891,6 @@ function buildCfgIrIrregMes(){
   MESES_NOMES.forEach((m,i)=>{const op=document.createElement('option');op.value=i;op.textContent=m+' '+S.config.ano;sel.appendChild(op);});
 }
 function cfgIrStatusChange(){
-  document.getElementById('cfg-ir-reg-wrap').style.display='none';
-  document.getElementById('cfg-ir-mes-ini-wrap').style.display='none';
   cfgIrCheckBtn();
 }
 function cfgIrAcaoChange(){
@@ -2920,7 +2914,7 @@ async function cfgSalvarIrmao(){
   const irregular_desde=acao==='irregularizacao'&&acaoMes!==''?parseInt(acaoMes):null;
   const regular_desde=acao==='regularizacao'&&acaoMes!==''?parseInt(acaoMes):null;
   const kit_placet_desde=acao==='placetado'&&acaoMes!==''?parseInt(acaoMes):null;
-  const data_reg=document.getElementById('cfg-ir-data-reg').value||null;
+  const data_reg=null;
   const mes_inicial=document.getElementById('cfg-ir-mes-ini').value!==''?parseInt(document.getElementById('cfg-ir-mes-ini').value):null;
   try{
     if(S.cfgIrEditId){
@@ -2931,8 +2925,8 @@ async function cfgSalvarIrmao(){
     }else{
       const{data:row,error}=await db.from('irmaos').insert({nome,status,grau,acao,irregular_desde,regular_desde,kit_placet_desde,data_reg,mes_inicial}).select().single();if(error)throw error;S.irmaos.push(row);toast('Irmão cadastrado ✓');
     }
-    ['cfg-ir-nome','cfg-ir-status','cfg-ir-grau','cfg-ir-acao','cfg-ir-acao-mes','cfg-ir-data-reg','cfg-ir-mes-ini'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    ['cfg-ir-acao-mes-wrap','cfg-ir-reg-wrap','cfg-ir-mes-ini-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+    ['cfg-ir-nome','cfg-ir-status','cfg-ir-grau','cfg-ir-acao','cfg-ir-acao-mes','cfg-ir-mes-ini'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    ['cfg-ir-acao-mes-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     document.getElementById('cfg-ir-btn').disabled=true;
     renderCfgIrmaos();renderIrmaos();populateIrmaoSelect();
   }catch(e){toast('Erro: '+e.message,'err');}
@@ -2943,10 +2937,7 @@ function cfgEditarIrmao(id){
   document.getElementById('cfg-ir-nome').value=ir.nome;
   document.getElementById('cfg-ir-status').value=ir.status||'mensalista';
   document.getElementById('cfg-ir-grau').value=ir.grau;
-  document.getElementById('cfg-ir-data-reg').value=ir.data_reg||'';
   document.getElementById('cfg-ir-mes-ini').value=ir.mes_inicial!=null?ir.mes_inicial:'';
-  document.getElementById('cfg-ir-mes-ini-wrap').style.display=ir.data_reg?'flex':'none';
-  document.getElementById('cfg-ir-reg-wrap').style.display='none';
   // Ação
   const acao=ir.acao||'';
   document.getElementById('cfg-ir-acao').value=acao;
@@ -2969,8 +2960,8 @@ function cfgEditarIrmao(id){
 }
 function cfgCancelarEdicaoIrmao(){
   S.cfgIrEditId=null;document.getElementById('cfg-ir-form-title').textContent='Novo Irmão';document.getElementById('cfg-ir-btn').textContent='＋ Cadastrar';document.getElementById('cfg-ir-cancel-btn').style.display='none';
-  ['cfg-ir-nome','cfg-ir-status','cfg-ir-grau','cfg-ir-acao','cfg-ir-acao-mes','cfg-ir-data-reg','cfg-ir-mes-ini'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['cfg-ir-acao-mes-wrap','cfg-ir-reg-wrap','cfg-ir-mes-ini-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  ['cfg-ir-nome','cfg-ir-status','cfg-ir-grau','cfg-ir-acao','cfg-ir-acao-mes','cfg-ir-mes-ini'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const wrap=document.getElementById('cfg-ir-acao-mes-wrap');if(wrap)wrap.style.display='none';
   document.getElementById('cfg-ir-btn').disabled=true;
 }
 function cfgExcluirIrmao(id){
