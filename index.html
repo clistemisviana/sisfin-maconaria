@@ -1509,7 +1509,7 @@ async function dbLoad(){
       S.config.saldo_ant_loja=parseFloat(S.config.saldo_ant_loja)||0;
       S.config.saldo_ant_tronco=parseFloat(S.config.saldo_ant_tronco)||0;
     }
-    S.irmaos=(irm.data||[]).map(r=>({...r,regular_desde:r.regular_desde??null,kit_placet_desde:r.kit_placet_desde??null}));
+    S.irmaos=(irm.data||[]).map(r=>({...r,acao:r.acao||null,regular_desde:r.regular_desde??null,irregular_desde:r.irregular_desde??null,kit_placet_desde:r.kit_placet_desde??null,mes_inicial:r.mes_inicial??null,data_reg:r.data_reg||null}));
     S.entradasLoja=(el.data||[]).map(r=>({...r,ano:getAno(r.data),mesesRef:r.meses_ref||[],receb:r.recebedor,razao:r.razao,tipo:r.tipo,irmao:r.irmao,valor:parseFloat(r.valor),talao:r.talao===0||r.talao==='0'?'S/N':r.talao,impresso_em:r.impresso_em||null}));
     S.saidasLoja=(sl.data||[]).map(r=>({...r,cat:r.categoria,agapeTipo:r.agape_tipo,desc:r.descricao,fotos:r.fotos||[],valor:parseFloat(r.valor)}));
     S.troncoEntradas=(tr.data||[]).map(r=>({...r,ano:getAno(r.data),sessao:r.sessao,qtd:r.qtd,total:parseFloat(r.total),esp:parseFloat(r.esp||0),pix:parseFloat(r.pix||0),qtdpix:r.qtdpix||0,magna:r.magna}));
@@ -2850,8 +2850,11 @@ function checkSenha(){
     document.getElementById('cfg-saldo-tronco').value=S.config.saldo_ant_tronco||'';
     // Ocultar seção usuários para não-admin
     document.getElementById('cfg-section-usuarios').style.display=SESSAO.perfil==='admin'?'':'none';
-    buildCfgMeses();buildCfgIrIrregMes();renderCfgIrmaos();renderCfgUsuarios();
-    carregarUsoSupabase();
+    try{buildCfgMeses();}catch(e){console.error('buildCfgMeses:',e);}
+    try{buildCfgIrIrregMes();}catch(e){console.error('buildCfgIrIrregMes:',e);}
+    try{renderCfgIrmaos();}catch(e){console.error('renderCfgIrmaos:',e);}
+    try{renderCfgUsuarios();}catch(e){console.error('renderCfgUsuarios:',e);}
+    try{carregarUsoSupabase();}catch(e){console.error('carregarUsoSupabase:',e);}
   }else{document.getElementById('cfg-erro').style.display='block';setTimeout(()=>document.getElementById('cfg-erro').style.display='none',2000);}
 }
 
