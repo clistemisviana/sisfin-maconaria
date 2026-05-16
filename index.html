@@ -2885,7 +2885,10 @@ async function alterarSenha(){
   if(nova&&nova===conf){try{await dbUpdateConfig({senha:nova});S.config.senha=nova;document.getElementById('cfg-senha-ok').style.display='block';setTimeout(()=>document.getElementById('cfg-senha-ok').style.display='none',2500);document.getElementById('cfg-nova-senha').value='';document.getElementById('cfg-conf-senha').value='';}catch(e){}}
 }
 function buildCfgIrIrregMes(){
-  const sel=document.getElementById('cfg-ir-irreg-mes');sel.innerHTML='<option value="">— mês —</option>';
+  // Popula o select de meses do campo Ação (cfg-ir-acao-mes)
+  const sel=document.getElementById('cfg-ir-acao-mes');
+  if(!sel)return;
+  sel.innerHTML='<option value="">— mês —</option>';
   MESES_NOMES.forEach((m,i)=>{const op=document.createElement('option');op.value=i;op.textContent=m+' '+S.config.ano;sel.appendChild(op);});
 }
 function cfgIrStatusChange(){
