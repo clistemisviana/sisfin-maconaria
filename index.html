@@ -885,7 +885,8 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
         <div class="field grow"><label>Irmão</label><select id="el-irmao"><option value="">— selecione —</option></select></div>
         <div class="field w120"><label>Pagamento</label><select id="el-tipo"><option value="">— tipo —</option><option value="pix">PIX</option><option value="especie">Espécie</option></select></div>
         <div class="field w140"><label>Recebedor</label><input type="text" id="el-receb" placeholder="Nome"></div>
-        <div class="field w120"><label>Razão</label><select id="el-razao"><option value="">— razão —</option><option value="mensalidade">Mensalidade</option><option value="doacao">Doação</option><option value="taxa-gorn">Taxa GORN</option></select></div>
+        <div class="field w120"><label>Razão</label><select id="el-razao"><option value="">— razão —</option><option value="mensalidade">Mensalidade</option><option value="doacao">Doação</option><option value="taxa-gorn">Taxa GORN</option><option value="iniciacao">Iniciação</option><option value="elevacao">Elevação</option><option value="exaltacao">Exaltação</option></select></div>
+        <div class="field w140" id="el-tipo-taxa-wrap" style="display:none"><label>Tipo da Taxa GORN</label><select id="el-tipo-taxa-gorn" onchange="elCheckBtn()"><option value="">— selecione —</option><option value="regularizacao">Regularização</option><option value="kit-placet">Kit Placet</option></select></div>
         <div class="field w100"><label>Valor (R$)</label><input type="number" id="el-valor" placeholder="0,00" min="0" step="0.01"></div>
       </div>
       <div class="meses-wrap hidden" id="el-meses-wrap">
@@ -1506,7 +1507,7 @@ async function dbLoad(){
       S.config.saldo_ant_tronco=parseFloat(S.config.saldo_ant_tronco)||0;
     }
     S.irmaos=(irm.data||[]).map(r=>({...r,acao:r.acao||null,regular_desde:r.regular_desde??null,irregular_desde:r.irregular_desde??null,kit_placet_desde:r.kit_placet_desde??null,mes_inicial:r.mes_inicial??null,data_reg:r.data_reg||null}));
-    S.entradasLoja=(el.data||[]).map(r=>({...r,ano:getAno(r.data),mesesRef:r.meses_ref||[],receb:r.recebedor,razao:r.razao,tipo:r.tipo,irmao:r.irmao,valor:parseFloat(r.valor),talao:r.talao===0||r.talao==='0'?'S/N':r.talao,impresso_em:r.impresso_em||null}));
+    S.entradasLoja=(el.data||[]).map(r=>({...r,ano:getAno(r.data),mesesRef:r.meses_ref||[],receb:r.recebedor,razao:r.razao,tipo:r.tipo,irmao:r.irmao,valor:parseFloat(r.valor),talao:r.talao===0||r.talao==='0'?'S/N':r.talao,impresso_em:r.impresso_em||null,tipo_taxa_gorn:r.tipo_taxa_gorn||null}));
     S.saidasLoja=(sl.data||[]).map(r=>({...r,cat:r.categoria,agapeTipo:r.agape_tipo,desc:r.descricao,fotos:r.fotos||[],valor:parseFloat(r.valor)}));
     S.troncoEntradas=(tr.data||[]).map(r=>({...r,ano:getAno(r.data),sessao:r.sessao,qtd:r.qtd,total:parseFloat(r.total),esp:parseFloat(r.esp||0),pix:parseFloat(r.pix||0),qtdpix:r.qtdpix||0,magna:r.magna}));
     S.troncoSaidas=(ts.data||[]).map(r=>({...r,cat:r.categoria,desc:r.descricao,fotos:r.fotos||[],valor:parseFloat(r.valor)}));
@@ -2463,9 +2464,11 @@ function elAtualizarMesesTags(){
 }
 
 function elCheckBtn(){
-  const ok=document.getElementById('el-irmao').value&&document.getElementById('el-tipo').value&&document.getElementById('el-receb').value.trim()&&document.getElementById('el-razao').value&&parseFloat(document.getElementById('el-valor').value)>0&&document.getElementById('el-data').value;
-  const mOk=document.getElementById('el-razao').value==='mensalidade'?S.elMesesSel.length>0:true;
-  document.getElementById('el-btn').disabled=!(ok&&mOk);
+  const razao=document.getElementById('el-razao').value;
+  const ok=document.getElementById('el-irmao').value&&document.getElementById('el-tipo').value&&document.getElementById('el-receb').value.trim()&&razao&&parseFloat(document.getElementById('el-valor').value)>0&&document.getElementById('el-data').value;
+  const mOk=razao==='mensalidade'?S.elMesesSel.length>0:true;
+  const taxaOk=razao==='taxa-gorn'?(document.getElementById('el-tipo-taxa-gorn').value!==''):true;
+  document.getElementById('el-btn').disabled=!(ok&&mOk&&taxaOk);
 }
 
 async function registrarEntradaLoja(){
@@ -2473,27 +2476,29 @@ async function registrarEntradaLoja(){
   const data=document.getElementById('el-data').value;const ano=getAno(data);const irmao=document.getElementById('el-irmao').value;
   const tipo=document.getElementById('el-tipo').value;const receb=document.getElementById('el-receb').value.trim();
   const razao=document.getElementById('el-razao').value;const valor=parseFloat(document.getElementById('el-valor').value)||0;
+  const tipo_taxa_gorn=razao==='taxa-gorn'?(document.getElementById('el-tipo-taxa-gorn').value||null):null;
   const isSN=S.elSN;
-  // S.elMesesSel já é [{mi, ano}] — salvar direto
   const mesesRef=[...S.elMesesSel].sort((a,b)=>a.ano!==b.ano?a.ano-b.ano:a.mi-b.mi);
   try{
     if(S.elEditId){
       const talaoManual=isSN?0:parseInt(document.getElementById('el-talao').value.replace('#',''))||null;
-      await dbUpdate('entradas_loja',S.elEditId,{data,ano,irmao,tipo,recebedor:receb,razao,valor,meses_ref:mesesRef,talao:talaoManual});
+      await dbUpdate('entradas_loja',S.elEditId,{data,ano,irmao,tipo,recebedor:receb,razao,tipo_taxa_gorn,valor,meses_ref:mesesRef,talao:talaoManual});
       const idx=S.entradasLoja.findIndex(r=>r.id===S.elEditId);
-      if(idx>=0)S.entradasLoja[idx]={...S.entradasLoja[idx],data,ano,irmao,tipo,receb,razao,valor,mesesRef,talao:isSN?'S/N':talaoManual};
+      if(idx>=0)S.entradasLoja[idx]={...S.entradasLoja[idx],data,ano,irmao,tipo,receb,razao,tipo_taxa_gorn,valor,mesesRef,talao:isSN?'S/N':talaoManual};
       recalcTaloes();await persistirTaloes();
       S.elEditId=null;document.getElementById('el-form-title').textContent='Nova Entrada';document.getElementById('el-cancel-btn').style.display='none';document.getElementById('el-btn').textContent='＋ Registrar Entrada';
       toast('Entrada atualizada ✓');
     }else{
       const talao=isSN?0:proximoTalao();
-      const{data:row,error}=await db.from('entradas_loja').insert({talao,data,ano,irmao,tipo,recebedor:receb,razao,valor,meses_ref:mesesRef}).select().single();
+      const{data:row,error}=await db.from('entradas_loja').insert({talao,data,ano,irmao,tipo,recebedor:receb,razao,tipo_taxa_gorn,valor,meses_ref:mesesRef}).select().single();
       if(error)throw error;
-      S.entradasLoja.push({...row,mesesRef,receb,valor:parseFloat(row.valor),talao:isSN?'S/N':talao});
+      S.entradasLoja.push({...row,mesesRef,receb,valor:parseFloat(row.valor),tipo_taxa_gorn,talao:isSN?'S/N':talao});
       recalcTaloes();await persistirTaloes();
       toast('Entrada registrada ✓');
     }
     ['el-irmao','el-tipo','el-receb','el-razao','el-valor'].forEach(id=>document.getElementById(id).value='');
+    const ttEl=document.getElementById('el-tipo-taxa-gorn');if(ttEl)ttEl.value='';
+    const ttWrap=document.getElementById('el-tipo-taxa-wrap');if(ttWrap)ttWrap.style.display='none';
     document.getElementById('el-data').value=hoje();
     document.getElementById('el-meses-wrap').classList.add('hidden');
     S.elMesesSel.length=0;S.elMesesAno='atual';S.elSN=false;
@@ -2514,6 +2519,16 @@ function elEditarRegistro(id){
   document.getElementById('el-receb').value=r.receb;
   document.getElementById('el-razao').value=r.razao;
   document.getElementById('el-valor').value=r.valor;
+  // Restaurar tipo_taxa_gorn
+  const ttWrap=document.getElementById('el-tipo-taxa-wrap');
+  const ttEl=document.getElementById('el-tipo-taxa-gorn');
+  if(r.razao==='taxa-gorn'){
+    if(ttWrap)ttWrap.style.display='flex';
+    if(ttEl)ttEl.value=r.tipo_taxa_gorn||'';
+  }else{
+    if(ttWrap)ttWrap.style.display='none';
+    if(ttEl)ttEl.value='';
+  }
   // Carregar meses — suporte formato legado (número) e novo ({mi,ano})
   S.elMesesSel.length=0;
   (r.mesesRef||[]).forEach(m=>{
@@ -2537,6 +2552,8 @@ function elCancelarEdicao(){
   document.getElementById('el-btn').textContent='＋ Registrar Entrada';
   document.getElementById('el-cancel-btn').style.display='none';
   ['el-irmao','el-tipo','el-receb','el-razao','el-valor'].forEach(id=>document.getElementById(id).value='');
+  const ttEl=document.getElementById('el-tipo-taxa-gorn');if(ttEl)ttEl.value='';
+  const ttWrap=document.getElementById('el-tipo-taxa-wrap');if(ttWrap)ttWrap.style.display='none';
   document.getElementById('el-data').value=hoje();
   document.getElementById('el-meses-wrap').classList.add('hidden');
   S.elMesesSel.length=0;
@@ -2577,8 +2594,12 @@ function renderElTabela(){
       const mAno=typeof m==='object'?m.ano:r.ano;
       return`<span class="mes-tag" style="background:${MONTH_COLORS[mi]}22;color:${MONTH_COLORS[mi]}">${MESES_NOMES[mi]} ${mAno}</span>`;
     }).join(''):`<span style="color:rgba(255,255,255,.3);font-size:11px">${r.ano}</span>`;
-    const razaoLabel=r.razao==='mensalidade'?'Mensalidade':r.razao==='doacao'?'Doação':r.razao==='taxa-gorn'?'Taxa GORN':r.razao;
-    const razaoChip=r.razao==='mensalidade'?'chip-mens':r.razao==='doacao'?'chip-doa':'chip-orange';
+    const RAZAO_LABEL={mensalidade:'Mensalidade',doacao:'Doação','taxa-gorn':'Taxa GORN',iniciacao:'Iniciação',elevacao:'Elevação',exaltacao:'Exaltação'};
+    const RAZAO_CHIP={mensalidade:'chip-mens',doacao:'chip-doa','taxa-gorn':'chip-orange',iniciacao:'chip-ap',elevacao:'chip-co',exaltacao:'chip-me'};
+    const razaoLabel=RAZAO_LABEL[r.razao]||r.razao;
+    const razaoChipClass=RAZAO_CHIP[r.razao]||'chip-orange';
+    const tipoTaxaLabel=r.razao==='taxa-gorn'&&r.tipo_taxa_gorn?(r.tipo_taxa_gorn==='regularizacao'?' · Reg.':' · Kit Placet'):'';
+    const razaoChip=r.razao==='mensalidade'?'chip-mens':r.razao==='doacao'?'chip-doa':razaoChipClass;
     const impresso=r.impresso_em?`<span style="font-size:10px;color:var(--green)" title="Impresso em ${fmtDate(r.impresso_em?.split('T')[0])}">🖨️ ${fmtDate(r.impresso_em?.split('T')[0])}</span>`:`<span style="color:rgba(255,255,255,.2);font-size:11px">—</span>`;
     const sel=elSelecionados.has(r.id);
     tr.innerHTML=`<td class="center"><input type="checkbox" class="el-row-check" data-id="${r.id}" ${sel?'checked':''} onclick="elToggleCheck('${r.id}',this)" style="cursor:pointer"></td>
@@ -2586,7 +2607,7 @@ function renderElTabela(){
       <td>${fmtDate(r.data)}</td><td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.irmao}</td>
       <td class="center sep"><span class="chip ${r.tipo==='pix'?'chip-pix':'chip-esp'}">${r.tipo==='pix'?'PIX':'Espécie'}</span></td>
       <td class="sep">${r.receb}</td>
-      <td class="center sep"><span class="chip ${razaoChip}">${razaoLabel}</span></td>
+      <td class="center sep"><span class="chip ${razaoChip}">${razaoLabel}${tipoTaxaLabel}</span></td>
       <td class="sep">${mHtml}</td>
       <td class="right sep-accent" style="font-weight:700;color:var(--green)">${fmt(r.valor)}</td>
       <td class="center sep">${impresso}</td>
@@ -3210,12 +3231,18 @@ window.addEventListener('DOMContentLoaded',async()=>{
   const elRazao=document.getElementById('el-razao');
   if(elRazao)elRazao.addEventListener('change',function(){
     const w=document.getElementById('el-meses-wrap');
+    const wTaxa=document.getElementById('el-tipo-taxa-wrap');
     if(this.value==='mensalidade'){
       w.classList.remove('hidden');
       document.getElementById('el-ano-atual-label').textContent=S.config.ano||new Date().getFullYear();
       document.getElementById('el-ano-ant-label').textContent=(S.config.ano||new Date().getFullYear())-1;
       elSelecionarAno('atual');
     }else{w.classList.add('hidden');S.elMesesSel.length=0;elAtualizarMesesTags();}
+    // Mostrar tipo de taxa só quando for taxa-gorn
+    if(wTaxa){
+      wTaxa.style.display=this.value==='taxa-gorn'?'flex':'none';
+      if(this.value!=='taxa-gorn'){const tt=document.getElementById('el-tipo-taxa-gorn');if(tt)tt.value='';}
+    }
     elCheckBtn();
   });
   ['el-irmao','el-tipo','el-receb','el-valor','el-data'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',elCheckBtn);});
