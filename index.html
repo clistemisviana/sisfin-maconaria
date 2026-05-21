@@ -86,9 +86,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .sb-sec{margin:4px 8px 0}
 .sb-sec-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.11em;color:rgba(255,255,255,.22);padding:6px 8px 2px;font-weight:700}
 .nav{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r2);
-  cursor:pointer;color:rgba(255,255,255,.5);font-size:12px;font-weight:500;
+  cursor:pointer;color:rgba(255,255,255,.85);font-size:12px;font-weight:500;
   transition:all .18s;margin-bottom:1px;border:1px solid transparent;position:relative}
-.nav:hover{background:rgba(139,92,246,.12);color:rgba(255,255,255,.85)}
+.nav:hover{background:rgba(139,92,246,.12);color:#fff}
 .nav.active{background:rgba(139,92,246,.18);color:#fff;font-weight:600;border-color:rgba(139,92,246,.3)}
 .nav.active::before{content:'';position:absolute;left:-1px;top:50%;transform:translateY(-50%);width:3px;height:16px;background:var(--violet2);border-radius:0 3px 3px 0}
 .nav.sub{padding-left:28px;font-size:11.5px}
@@ -1925,90 +1925,115 @@ function renderDashAgape(){
   animVal(document.getElementById('ag-mdo'),agMdo);document.getElementById('ag-mdo-sub').textContent=agTotal>0?Math.round(agMdo/agTotal*100)+'% do total':'—';
   document.getElementById('ag-sessoes').textContent=agSessoes;animVal(document.getElementById('ag-media'),agMedia);
 
-  // Gráfico de média móvel por sessão
+  // Gráfico de colunas gradiente + linha média móvel por sessão
   if(CC['c-agape-media'])CC['c-agape-media'].destroy();
   const canvMedia=document.getElementById('c-agape-media');if(!canvMedia)return;
 
-  // Buscar saídas de ágape com data — ordenar por data
-  const sessoesAg=agSai
-    .map(r=>({data:r.data,valor:r.valor,sessao:r.data}))
-    .sort((a,b)=>a.data.localeCompare(b.data));
-
-  // Agrupar por data (uma sessão pode ter compras + mdo)
+  const sessoesAg=agSai.map(r=>({data:r.data,valor:r.valor})).sort((a,b)=>a.data.localeCompare(b.data));
   const porData={};
-  sessoesAg.forEach(r=>{
-    if(!porData[r.data])porData[r.data]=0;
-    porData[r.data]+=r.valor;
-  });
+  sessoesAg.forEach(r=>{if(!porData[r.data])porData[r.data]=0;porData[r.data]+=r.valor;});
   const datas=Object.keys(porData).sort();
   if(datas.length===0)return;
 
-  // Calcular média móvel acumulada por sessão
-  let acum=0;
-  const mediaMovel=datas.map((d,i)=>{
-    acum+=porData[d];
-    return Math.round(acum/(i+1));
-  });
-
-  // Labels: data formatada + tipo sessão do tronco mais próximo
+  let acumMedia=0;
+  const mediaMovel=datas.map((d,i)=>{acumMedia+=porData[d];return Math.round(acumMedia/(i+1));});
+  const valoresSessao=datas.map(d=>Math.round(porData[d]));
   const labs=datas.map(d=>{
     const trEntry=S.troncoEntradas.find(r=>r.data===d);
     const sessao=trEntry?.sessao||trEntry?.tipo_sessao||'';
     return sessao?[fmtDate(d),sessao]:[fmtDate(d)];
   });
 
-  // Cor neon vermelho
   const ctxM=canvMedia.getContext('2d');
-  const gradRed=ctxM.createLinearGradient(0,0,canvMedia.width||400,0);
-  gradRed.addColorStop(0,'rgba(255,26,26,0)');
-  gradRed.addColorStop(0.5,'rgba(255,80,80,1)');
-  gradRed.addColorStop(1,'rgba(255,26,26,0)');
+  const gradBar=ctxM.createLinearGradient(0,0,0,200);
+  gradBar.addColorStop(0,'#FFB347');
+  gradBar.addColorStop(1,'#FF6B00');
 
   const gradFill=ctxM.createLinearGradient(0,0,0,200);
-  gradFill.addColorStop(0,'rgba(255,26,26,0.25)');
-  gradFill.addColorStop(1,'rgba(255,26,26,0)');
+  gradFill.addColorStop(0,'rgba(255,51,51,0.15)');
+  gradFill.addColorStop(1,'rgba(255,51,51,0)');
 
   CC['c-agape-media']=new Chart(canvMedia,{
-    type:'line',
-    data:{labels:labs,datasets:[{
-      label:'Média acumulada/sessão',
-      data:mediaMovel,
-      borderColor:'#ff3333',
-      backgroundColor:gradFill,
-      fill:true,
-      tension:.4,
-      borderWidth:2.5,
-      pointRadius:5,
-      pointBackgroundColor:'#ff3333',
-      pointBorderColor:'rgba(13,14,42,.8)',
-      pointBorderWidth:2,
-      shadowColor:'rgba(255,51,51,0.8)',
-      shadowBlur:12,
-    }]},
+    type:'bar',
+    data:{labels:labs,datasets:[
+      {
+        label:'Valor da sessão',
+        data:valoresSessao,
+        backgroundColor:gradBar,
+        borderRadius:{topLeft:7,topRight:7,bottomLeft:0,bottomRight:0},
+        borderSkipped:false,
+        barPercentage:.6,
+        categoryPercentage:.75,
+        order:2,
+      },
+      {
+        label:'Média acumulada',
+        data:mediaMovel,
+        type:'line',
+        borderColor:'#ff3333',
+        backgroundColor:gradFill,
+        fill:true,
+        tension:.4,
+        borderWidth:2.5,
+        pointRadius:5,
+        pointBackgroundColor:'#ff3333',
+        pointBorderColor:'rgba(13,14,42,.9)',
+        pointBorderWidth:2,
+        order:1,
+      }
+    ]},
     options:{
       responsive:true,maintainAspectRatio:false,animation:{duration:800},
       interaction:{mode:'index',intersect:false},
       plugins:{
         legend:{display:false},
         tooltip:{
-          backgroundColor:'rgba(13,14,42,.95)',borderColor:'rgba(255,51,51,.4)',
-          borderWidth:1,padding:10,cornerRadius:9,titleColor:'#fff',bodyColor:'rgba(255,255,255,.85)',
+          backgroundColor:'rgba(13,14,42,.95)',borderColor:'rgba(255,107,0,.3)',
+          borderWidth:1,padding:10,cornerRadius:8,titleColor:'#fff',bodyColor:'rgba(255,255,255,.8)',
           callbacks:{
-            label:c=>' Média: '+fmt(c.parsed.y),
-            afterLabel:(c)=>{
-              const v=porData[datas[c.dataIndex]]||0;
-              return ' Sessão: '+fmt(v);
+            label:c=>{
+              if(c.datasetIndex===0)return ' Sessão: '+fmt(c.parsed.y);
+              return ' Média: '+fmt(c.parsed.y);
             }
           }
         }
       },
-      layout:{padding:{top:28,left:16,right:16,bottom:4}},
+      layout:{padding:{top:28,left:8,right:8,bottom:4}},
       scales:{
         x:{ticks:{color:'rgba(255,255,255,.65)',font:{size:10,weight:'600'},maxRotation:0},grid:{display:false}},
-        y:{display:false,afterDataLimits(s){if(s.max>0)s.max=s.max*1.4;if(s.min>0)s.min=s.min*0.85;}}
+        y:{display:false,afterDataLimits(s){if(s.max>0)s.max=s.max*1.45;if(s.min>0)s.min=s.min*0.8;}}
       }
     },
-    plugins:[lineDataLabels]
+    plugins:[{
+      id:'agapeLabels',
+      afterDatasetsDraw(chart){
+        const{ctx,data}=chart;
+        // Rótulos das BARRAS — dentro da base (branco)
+        const metaBar=chart.getDatasetMeta(0);
+        metaBar.data.forEach((bar,i)=>{
+          const v=data.datasets[0].data[i];
+          if(!v)return;
+          ctx.save();
+          ctx.font='bold 10px Arial';
+          ctx.fillStyle='rgba(255,255,255,0.92)';
+          ctx.textAlign='center';
+          ctx.fillText(fmt(v),bar.x,bar.base-10);
+          ctx.restore();
+        });
+        // Rótulos da LINHA — acima de cada ponto (vermelho claro)
+        const metaLine=chart.getDatasetMeta(1);
+        metaLine.data.forEach((point,i)=>{
+          const v=data.datasets[1].data[i];
+          if(!v)return;
+          ctx.save();
+          ctx.font='bold 10px Arial';
+          ctx.fillStyle='#ff8080';
+          ctx.textAlign='center';
+          ctx.fillText(fmt(v),point.x,point.y-12);
+          ctx.restore();
+        });
+      }
+    }]
   });
 }
 
@@ -2358,7 +2383,7 @@ function gerarHtmlTaloes(registros,loja){
         </div>
       </div>
       <div class="talao-body">
-        <div class="talao-campo span2"><label>Irmão</label><p>${r.irmao}</p></div>
+        <div class="talao-campo span2"><label>Irmão</label><p style="font-size:14px">${r.irmao}</p></div>
         <div class="talao-campo"><label>Pagamento</label><p>${tipoLabel}</p></div>
         <div class="talao-campo"><label>Razão</label><p>${razaoLabel}</p></div>
         <div class="talao-campo span2"><label>Mês(es) de referência</label><p>${mesesStr}</p></div>
@@ -2390,23 +2415,23 @@ function gerarHtmlTaloes(registros,loja){
     .talao{height:100%;padding:8px 10px;display:flex;flex-direction:column;gap:5px}
     .talao-vazio{background:#fafafa}
     .talao-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
-    .talao-loja-nome{font-size:10px;font-weight:700;letter-spacing:.03em}
-    .talao-loja-end{font-size:8.5px;color:#555;margin-top:2px}
+    .talao-loja-nome{font-size:12px;font-weight:700;letter-spacing:.03em}
+    .talao-loja-end{font-size:9.5px;color:#555;margin-top:2px}
     .talao-num-box{text-align:right;min-width:62px;padding-left:10px}
-    .talao-num-label{font-size:8px;color:#888}
-    .talao-num-val{font-size:20px;font-weight:700;line-height:1.1}
-    .talao-num-ano{font-size:8px;color:#666}
+    .talao-num-label{font-size:9px;color:#888}
+    .talao-num-val{font-size:22px;font-weight:700;line-height:1.1}
+    .talao-num-ano{font-size:9px;color:#666}
     .talao-body{border-top:0.5px solid #ddd;padding-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;flex:1}
     .talao-row4{display:contents}
     .span2{grid-column:span 2}
     .span4{grid-column:span 2}
-    .talao-campo label{font-size:8.5px;color:#777;display:block;white-space:nowrap;margin-bottom:1px}
-    .talao-campo p{font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .talao-campo label{font-size:9px;color:#777;display:block;white-space:nowrap;margin-bottom:1px}
+    .talao-campo p{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .talao-footer{grid-column:span 2;display:flex;justify-content:space-between;align-items:flex-end;margin-top:4px;padding-top:6px;border-top:0.5px solid #eee}
-    .talao-valor label{font-size:8.5px;color:#777}
-    .talao-valor p{font-size:16px;font-weight:700}
+    .talao-valor label{font-size:9px;color:#777}
+    .talao-valor p{font-size:14px;font-weight:700}
     .talao-assina{text-align:center;border-top:0.5px solid #999;padding-top:3px;min-width:120px}
-    .talao-assina span{font-size:8.5px;color:#777}
+    .talao-assina span{font-size:9px;color:#777}
     @media print{body{margin:0}@page{size:A4;margin:5mm}}
   </style></head><body>${paginas.join('')}</body></html>`;
 }
