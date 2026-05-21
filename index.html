@@ -814,9 +814,15 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
         <div class="ag-info"><div class="ag-label">📊 Média/Sessão</div><div class="ag-val" id="ag-media" style="color:var(--violet2)">—</div><div class="ag-sub">custo médio</div></div>
       </div>
     </div>
+    <!-- Gráfico de média móvel por sessão -->
+    <div class="chart-card" style="margin-top:14px">
+      <div class="cc-head">
+        <div class="cc-dot" style="background:linear-gradient(135deg,#ff1a1a,#ff6666)"></div>
+        <div class="cc-title">Média Móvel por Sessão — Ágape</div>
+      </div>
+      <div style="position:relative;height:220px"><canvas id="c-agape-media"></canvas></div>
+    </div>
   </div>
-
-  <!-- MENSALIDADES -->
   <div class="page" id="page-mensalidades">
     <div class="sec-div">Mensalidades</div>
     <div class="saldo-ant-display" id="mens-sad" style="display:none"><span class="sad-label">🏦 Saldo Anterior</span><span class="sad-val" id="mens-sad-val">—</span><span class="sad-note" id="mens-sad-note">—</span></div>
@@ -950,11 +956,13 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
             <option value="agape">Ágape</option>
             <option value="caern">CAERN</option>
             <option value="cosern">COSERN</option>
+            <option value="eventos">Eventos</option>
             <option value="gorn">GORN</option>
             <option value="iptu">IPTU</option>
             <option value="iptu-neg">IPTU Negociado</option>
             <option value="limpeza">Limpeza da Loja</option>
             <option value="manutencao">Manutenção da Loja</option>
+            <option value="manutencao-bb">Manutenção Conta BB</option>
             <option value="seguranca">Segurança</option>
             <option value="outros">Outros</option>
           </select>
@@ -1397,7 +1405,7 @@ const _navigateToOrig=typeof navigateTo==='undefined'?null:navigateTo;
 /* ═══════════════ CONSTANTES ═══════════════ */
 const MESES_NOMES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const MONTH_COLORS=['#7c3aed','#0891b2','#059669','#d97706','#dc2626','#4f46e5','#0891b2','#059669','#7c3aed','#d97706','#dc2626','#4f46e5'];
-const CAT_LABEL={admin:'Administrativo',agape:'Ágape',caern:'CAERN',cosern:'COSERN',gorn:'GORN',iptu:'IPTU','iptu-neg':'IPTU Neg.',limpeza:'Limpeza',manutencao:'Manutenção',seguranca:'Segurança',outros:'Outros'};
+const CAT_LABEL={admin:'Administrativo',agape:'Ágape',caern:'CAERN',cosern:'COSERN',eventos:'Eventos',gorn:'GORN',iptu:'IPTU','iptu-neg':'IPTU Neg.',limpeza:'Limpeza',manutencao:'Manutenção','manutencao-bb':'Manut. Conta BB',seguranca:'Segurança',outros:'Outros'};
 const DEST_LABEL={lar:'Lar da Vovozinha',ce:'Centro Espírita',outros:'Outros'};
 const SESSAO_LABEL={aprendiz:'Aprendiz',companheiro:'Companheiro',mestre:'Mestre',magna:'Magna Pública'};
 const SESSAO_CHIP={aprendiz:'chip-ap',companheiro:'chip-co',mestre:'chip-me',magna:'chip-mp'};
@@ -1916,6 +1924,92 @@ function renderDashAgape(){
   animVal(document.getElementById('ag-compras'),agCompras);document.getElementById('ag-compras-sub').textContent=agTotal>0?Math.round(agCompras/agTotal*100)+'% do total':'—';
   animVal(document.getElementById('ag-mdo'),agMdo);document.getElementById('ag-mdo-sub').textContent=agTotal>0?Math.round(agMdo/agTotal*100)+'% do total':'—';
   document.getElementById('ag-sessoes').textContent=agSessoes;animVal(document.getElementById('ag-media'),agMedia);
+
+  // Gráfico de média móvel por sessão
+  if(CC['c-agape-media'])CC['c-agape-media'].destroy();
+  const canvMedia=document.getElementById('c-agape-media');if(!canvMedia)return;
+
+  // Buscar saídas de ágape com data — ordenar por data
+  const sessoesAg=agSai
+    .map(r=>({data:r.data,valor:r.valor,sessao:r.data}))
+    .sort((a,b)=>a.data.localeCompare(b.data));
+
+  // Agrupar por data (uma sessão pode ter compras + mdo)
+  const porData={};
+  sessoesAg.forEach(r=>{
+    if(!porData[r.data])porData[r.data]=0;
+    porData[r.data]+=r.valor;
+  });
+  const datas=Object.keys(porData).sort();
+  if(datas.length===0)return;
+
+  // Calcular média móvel acumulada por sessão
+  let acum=0;
+  const mediaMovel=datas.map((d,i)=>{
+    acum+=porData[d];
+    return Math.round(acum/(i+1));
+  });
+
+  // Labels: data formatada + tipo sessão do tronco mais próximo
+  const labs=datas.map(d=>{
+    const trEntry=S.troncoEntradas.find(r=>r.data===d);
+    const sessao=trEntry?.sessao||trEntry?.tipo_sessao||'';
+    return sessao?[fmtDate(d),sessao]:[fmtDate(d)];
+  });
+
+  // Cor neon vermelho
+  const ctxM=canvMedia.getContext('2d');
+  const gradRed=ctxM.createLinearGradient(0,0,canvMedia.width||400,0);
+  gradRed.addColorStop(0,'rgba(255,26,26,0)');
+  gradRed.addColorStop(0.5,'rgba(255,80,80,1)');
+  gradRed.addColorStop(1,'rgba(255,26,26,0)');
+
+  const gradFill=ctxM.createLinearGradient(0,0,0,200);
+  gradFill.addColorStop(0,'rgba(255,26,26,0.25)');
+  gradFill.addColorStop(1,'rgba(255,26,26,0)');
+
+  CC['c-agape-media']=new Chart(canvMedia,{
+    type:'line',
+    data:{labels:labs,datasets:[{
+      label:'Média acumulada/sessão',
+      data:mediaMovel,
+      borderColor:'#ff3333',
+      backgroundColor:gradFill,
+      fill:true,
+      tension:.4,
+      borderWidth:2.5,
+      pointRadius:5,
+      pointBackgroundColor:'#ff3333',
+      pointBorderColor:'rgba(13,14,42,.8)',
+      pointBorderWidth:2,
+      shadowColor:'rgba(255,51,51,0.8)',
+      shadowBlur:12,
+    }]},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:800},
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'rgba(13,14,42,.95)',borderColor:'rgba(255,51,51,.4)',
+          borderWidth:1,padding:10,cornerRadius:9,titleColor:'#fff',bodyColor:'rgba(255,255,255,.85)',
+          callbacks:{
+            label:c=>' Média: '+fmt(c.parsed.y),
+            afterLabel:(c)=>{
+              const v=porData[datas[c.dataIndex]]||0;
+              return ' Sessão: '+fmt(v);
+            }
+          }
+        }
+      },
+      layout:{padding:{top:28,left:16,right:16,bottom:4}},
+      scales:{
+        x:{ticks:{color:'rgba(255,255,255,.65)',font:{size:10,weight:'600'},maxRotation:0},grid:{display:false}},
+        y:{display:false,afterDataLimits(s){if(s.max>0)s.max=s.max*1.4;if(s.min>0)s.min=s.min*0.85;}}
+      }
+    },
+    plugins:[lineDataLabels]
+  });
 }
 
 function renderDashInadimplencia(mesesFilt){
