@@ -1167,8 +1167,49 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
         <button class="btn btn-ghost btn-sm" onclick="carregarUsoSupabase()">🔄 Atualizar</button>
       </div>
 
-      <div class="config-section">
-        <h3>🏛️ Identidade da Loja</h3>
+      <!-- CARD BACKUP E SEGURANÇA -->
+      <div class="config-section" style="background:rgba(34,211,160,.04);border-color:rgba(34,211,160,.2)">
+        <h3>🛡️ Segurança dos Dados</h3>
+
+        <!-- Aviso de dias sem acesso -->
+        <div id="backup-alerta" style="display:none;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:10px 14px;margin-bottom:14px">
+          <p style="font-size:12px;color:var(--orange);margin:0;font-weight:600">⚠️ <span id="backup-alerta-msg"></span></p>
+          <p style="font-size:11px;color:rgba(255,255,255,.5);margin:4px 0 0">O Supabase pausa projetos após 7 dias sem acesso. Acesse o sistema regularmente para evitar isso.</p>
+        </div>
+
+        <!-- Info último acesso -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px">
+          <div class="kpi" style="padding:12px 14px">
+            <div class="kpi-label">📅 Último acesso</div>
+            <div class="kpi-val" id="backup-ultimo-acesso" style="color:var(--green);font-size:15px">—</div>
+            <div class="kpi-sub" id="backup-dias-sub">calculando...</div>
+          </div>
+          <div class="kpi" style="padding:12px 14px">
+            <div class="kpi-label">💾 Último backup</div>
+            <div class="kpi-val" id="backup-ultimo-backup" style="color:var(--blue);font-size:15px">—</div>
+            <div class="kpi-sub" id="backup-backup-sub">nunca realizado</div>
+          </div>
+          <div class="kpi" style="padding:12px 14px">
+            <div class="kpi-label">📊 Registros no backup</div>
+            <div class="kpi-val" id="backup-total-reg" style="color:var(--violet2);font-size:15px">—</div>
+            <div class="kpi-sub">total de entradas</div>
+          </div>
+        </div>
+
+        <!-- Botões -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-primary btn-sm" onclick="exportarBackup()" style="background:rgba(34,211,160,.2);border-color:rgba(34,211,160,.4);color:var(--green)">
+            📥 Exportar backup (JSON)
+          </button>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer;display:flex;align-items:center;gap:6px">
+            📤 Importar backup
+            <input type="file" id="backup-file-input" accept=".json" style="display:none" onchange="importarBackup(this)">
+          </label>
+        </div>
+        <p style="font-size:10px;color:rgba(255,255,255,.3);margin:10px 0 0;line-height:1.6">
+          O backup exporta todos os dados em formato JSON. Guarde em local seguro (computador, pendrive ou Google Drive). Para restaurar, use o botão "Importar backup" e selecione o arquivo.
+        </p>
+      </div>
         <div class="logo-preview" id="cfg-logo" onclick="document.getElementById('cfg-logo-file').click()">⌖<img id="cfg-logo-img" src="" alt=""></div>
         <input type="file" id="cfg-logo-file" accept="image/*" style="display:none" onchange="uploadLogo(this)">
         <p style="font-size:11px;color:var(--muted2);margin-bottom:12px">Clique para trocar a logo</p>
@@ -2937,7 +2978,135 @@ function renderIrmaos(){
   });
 }
 
-/* ═══════════════ USO DO SUPABASE ═══════════════ */
+/* ═══════════════ BACKUP E SEGURANÇA ═══════════════ */
+function registrarAcesso(){
+  const hoje=new Date().toISOString().split('T')[0];
+  localStorage.setItem('sisfin_ultimo_acesso',hoje);
+}
+
+function carregarInfoBackup(){
+  // Último acesso
+  const ultimoAcesso=localStorage.getItem('sisfin_ultimo_acesso');
+  const ultimoBackup=localStorage.getItem('sisfin_ultimo_backup');
+  const totalReg=localStorage.getItem('sisfin_backup_total')||'—';
+
+  if(ultimoAcesso){
+    const dias=Math.floor((new Date()-new Date(ultimoAcesso))/(1000*60*60*24));
+    const el=document.getElementById('backup-ultimo-acesso');
+    const sub=document.getElementById('backup-dias-sub');
+    const alerta=document.getElementById('backup-alerta');
+    const alertaMsg=document.getElementById('backup-alerta-msg');
+    if(el){el.textContent=fmtDate(ultimoAcesso);el.style.color=dias>=5?'var(--red)':dias>=3?'var(--orange)':'var(--green)';}
+    if(sub){sub.textContent=dias===0?'hoje':dias===1?'ontem':`há ${dias} dias`;}
+    if(dias>=5&&alerta&&alertaMsg){
+      alerta.style.display='block';
+      alertaMsg.textContent=dias>=7?`⚠️ ${dias} dias sem acesso! O banco pode ter sido pausado.`:`Atenção: ${dias} dias sem acesso. Acesse regularmente para evitar pausa.`;
+    }else if(alerta){alerta.style.display='none';}
+  }
+
+  if(ultimoBackup){
+    const diasB=Math.floor((new Date()-new Date(ultimoBackup))/(1000*60*60*24));
+    const el=document.getElementById('backup-ultimo-backup');
+    const sub=document.getElementById('backup-backup-sub');
+    if(el){el.textContent=fmtDate(ultimoBackup);el.style.color=diasB>30?'var(--orange)':'var(--blue)';}
+    if(sub){sub.textContent=diasB===0?'hoje':diasB===1?'ontem':`há ${diasB} dias`+(diasB>30?' ⚠️':'');}
+  }else{
+    const el=document.getElementById('backup-ultimo-backup');
+    if(el){el.textContent='Nunca';el.style.color='var(--red)';}
+  }
+
+  const tr=document.getElementById('backup-total-reg');
+  if(tr)tr.textContent=totalReg;
+}
+
+async function exportarBackup(){
+  try{
+    toast('Gerando backup...');
+    const [irm,el,sl,te,ts,cfg]=await Promise.all([
+      db.from('irmaos').select('*'),
+      db.from('entradas_loja').select('*'),
+      db.from('saidas_loja').select('*'),
+      db.from('tronco_entradas').select('*'),
+      db.from('tronco_saidas').select('*'),
+      db.from('config').select('*'),
+    ]);
+    const backup={
+      versao:'2.0',
+      data:new Date().toISOString(),
+      loja:S.config.nome_loja||'SisFinMaçonaria',
+      tabelas:{
+        irmaos:irm.data||[],
+        entradas_loja:el.data||[],
+        saidas_loja:sl.data||[],
+        tronco_entradas:te.data||[],
+        tronco_saidas:ts.data||[],
+        config:cfg.data||[],
+      }
+    };
+    const total=(irm.data?.length||0)+(el.data?.length||0)+(sl.data?.length||0)+(te.data?.length||0)+(ts.data?.length||0);
+    const json=JSON.stringify(backup,null,2);
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const dataStr=new Date().toISOString().split('T')[0];
+    a.href=url;a.download=`SisFinMaçonaria_backup_${dataStr}.json`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    // Registrar backup
+    const hoje=new Date().toISOString().split('T')[0];
+    localStorage.setItem('sisfin_ultimo_backup',hoje);
+    localStorage.setItem('sisfin_backup_total',total.toString());
+    carregarInfoBackup();
+    toast(`Backup exportado com sucesso! ${total} registros ✓`);
+  }catch(e){
+    toast('Erro ao exportar backup: '+e.message);
+    console.error(e);
+  }
+}
+
+async function importarBackup(input){
+  const file=input.files[0];if(!file)return;
+  const confirmar=confirm(`⚠️ ATENÇÃO!\n\nA importação vai SUBSTITUIR todos os dados existentes pelos dados do backup.\n\nTem certeza que deseja continuar?\n\nArquivo: ${file.name}`);
+  if(!confirmar){input.value='';return;}
+  try{
+    toast('Lendo arquivo...');
+    const text=await file.text();
+    const backup=JSON.parse(text);
+    if(!backup.tabelas||!backup.versao){toast('Arquivo de backup inválido!');return;}
+    const{irmaos,entradas_loja,saidas_loja,tronco_entradas,tronco_saidas,config:cfgB}=backup.tabelas;
+    toast('Restaurando dados...');
+    // Limpar e reinserir cada tabela
+    const tabelas=[
+      {nome:'irmaos',dados:irmaos},
+      {nome:'entradas_loja',dados:entradas_loja},
+      {nome:'saidas_loja',dados:saidas_loja},
+      {nome:'tronco_entradas',dados:tronco_entradas},
+      {nome:'tronco_saidas',dados:tronco_saidas},
+    ];
+    for(const t of tabelas){
+      if(!t.dados?.length)continue;
+      // Deletar existentes
+      await db.from(t.nome).delete().neq('id','00000000-0000-0000-0000-000000000000');
+      // Reinserir em lotes de 100
+      for(let i=0;i<t.dados.length;i+=100){
+        const lote=t.dados.slice(i,i+100);
+        const{error}=await db.from(t.nome).insert(lote);
+        if(error)throw new Error(`Erro em ${t.nome}: ${error.message}`);
+      }
+    }
+    // Recarregar dados
+    await dbLoad();
+    renderDash();renderIrmaos();renderMensalidades();renderDoacoes();renderTaxasGorn();renderElTabela();renderSlTabela();renderTrTabela();renderTsTabela();
+    input.value='';
+    toast(`Backup restaurado com sucesso! ✓`);
+  }catch(e){
+    toast('Erro ao importar: '+e.message);
+    console.error(e);
+    input.value='';
+  }
+}
+
+
 async function carregarUsoSupabase(){
   document.getElementById('supa-db-size').textContent='...';
   document.getElementById('supa-total-rows').textContent='...';
@@ -2991,6 +3160,7 @@ function checkSenha(){
     try{renderCfgIrmaos();}catch(e){console.error('renderCfgIrmaos:',e);}
     try{renderCfgUsuarios();}catch(e){console.error('renderCfgUsuarios:',e);}
     try{carregarUsoSupabase();}catch(e){console.error('carregarUsoSupabase:',e);}
+    try{carregarInfoBackup();}catch(e){console.error('carregarInfoBackup:',e);}
   }else{document.getElementById('cfg-erro').style.display='block';setTimeout(()=>document.getElementById('cfg-erro').style.display='none',2000);}
 }
 
@@ -3306,6 +3476,7 @@ async function init(){
   buildMesesChips(document.getElementById('el-meses-chips'),elCheckBtn);
   aplicarPerfil();
   renderDash();renderIrmaos();renderMensalidades();renderDoacoes();renderTaxasGorn();renderElTabela();renderSlTabela();renderTrTabela();renderTsTabela();
+  registrarAcesso();
   loading.classList.add('hidden');loading.classList.remove('active');setTimeout(()=>{},500);
   toast(`Bem-vindo, ${SESSAO.usuario?.nome?.split(' ')[0]||''}! ✓`,'ok',2500);
 }
