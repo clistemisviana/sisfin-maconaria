@@ -3142,32 +3142,36 @@ function gerarHtmlComprovante(r){
   const dataFmt=r.data?new Date(r.data+'T12:00:00').toLocaleDateString('pt-BR'):'—';
   const tipoStr=r.tipo==='pix'?'PIX':'Espécie';
   const nomeLoja=S.config.nome_loja||'Loja Filhos da Fé';
-  return `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.12)">
-  <div style="background:linear-gradient(135deg,#1a1a3e 0%,#2d2d6b 100%);padding:24px 28px 20px;text-align:center;color:#fff">
-    <div style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:5px">Loja Maçônica</div>
-    <div style="font-size:19px;font-weight:700;color:#fff;margin-bottom:6px">${nomeLoja}</div>
-    <div style="font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.06em;margin-bottom:3px">Fundada em 1899</div>
-    <div style="font-size:10px;color:rgba(255,255,255,.38);letter-spacing:.03em">Rua Santo Antônio, 736, Cidade Alta, Natal - RN</div>
-    <div style="display:inline-block;margin-top:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 16px;font-size:11px;color:rgba(255,255,255,.8);letter-spacing:.06em">Comprovante Nº ${r.talao==='S/N'?'—':r.talao}</div>
-  </div>
-  <div style="background:#dcfce7;border-bottom:3px solid #16a34a;padding:10px 28px;text-align:center;font-size:12px;font-weight:700;color:#15803d;letter-spacing:.05em;text-transform:uppercase">✅ Pagamento Confirmado</div>
-  <div style="padding:24px 28px">
-    <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:4px">Ir∴ ${r.irmao}</div>
-    <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:20px">🔺 ${grauLabel}</div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.07em">Referência</span><span style="font-size:13px;font-weight:600;color:#222">${refStr}</span></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.07em">Data do pagamento</span><span style="font-size:13px;font-weight:600;color:#222">${dataFmt}</span></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.07em">Forma de pagamento</span><span style="font-size:13px;font-weight:600;color:#222">${tipoStr}</span></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.07em">Recebido por</span><span style="font-size:13px;font-weight:600;color:#222">${r.receb||'Tesoureiro'}</span></div>
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden">
+  <tr><td style="background:#1a1a3e;padding:24px 28px 20px;text-align:center">
+    <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#9999cc">Loja Maçônica</p>
+    <p style="margin:0 0 6px;font-size:19px;font-weight:700;color:#ffffff">${nomeLoja}</p>
+    <p style="margin:0 0 3px;font-size:10px;color:#8888aa">Fundada em 1899</p>
+    <p style="margin:0 0 14px;font-size:10px;color:#7777aa">Rua Santo Antônio, 736, Cidade Alta, Natal - RN</p>
+    <span style="display:inline-block;background:#ffffff22;border:1px solid #ffffff33;border-radius:20px;padding:4px 16px;font-size:11px;color:#ccccee">Comprovante Nº ${r.talao==='S/N'?'—':r.talao}</span>
+  </td></tr>
+  <tr><td style="background:#dcfce7;border-bottom:3px solid #16a34a;padding:10px 28px;text-align:center;font-size:12px;font-weight:700;color:#15803d;letter-spacing:.05em;text-transform:uppercase">✅ Pagamento Confirmado</td></tr>
+  <tr><td style="padding:24px 28px">
+    <p style="margin:0 0 4px;font-size:18px;font-weight:700;color:#111111">Ir∴ ${r.irmao}</p>
+    <p style="margin:0 0 20px;font-size:11px;color:#888888;text-transform:uppercase;letter-spacing:.08em">🔺 ${grauLabel}</p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:6px 0;font-size:11px;color:#999999;text-transform:uppercase;letter-spacing:.07em;width:50%">Referência</td><td align="right" style="padding:6px 0;font-size:13px;font-weight:600;color:#222222">${refStr}</td></tr>
+      <tr><td style="padding:6px 0;font-size:11px;color:#999999;text-transform:uppercase;letter-spacing:.07em">Data do pagamento</td><td align="right" style="padding:6px 0;font-size:13px;font-weight:600;color:#222222">${dataFmt}</td></tr>
+      <tr><td style="padding:6px 0;font-size:11px;color:#999999;text-transform:uppercase;letter-spacing:.07em">Forma de pagamento</td><td align="right" style="padding:6px 0;font-size:13px;font-weight:600;color:#222222">${tipoStr}</td></tr>
+      <tr><td style="padding:6px 0;font-size:11px;color:#999999;text-transform:uppercase;letter-spacing:.07em">Recebido por</td><td align="right" style="padding:6px 0;font-size:13px;font-weight:600;color:#222222">${r.receb||'Tesoureiro'}</td></tr>
+    </table>
     <div style="height:1px;background:#f0f0f0;margin:16px 0"></div>
-    <div style="background:#f8f9fa;border:2px solid #e9ecef;border-radius:10px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#888">Valor pago</span>
-      <span style="font-size:26px;font-weight:700;color:#16a34a">${valorFmt}</span>
-    </div>
-  </div>
-  <div style="background:#1a1a3e;padding:16px 28px;text-align:center">
-    <p style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.6;margin:0">Este comprovante é um documento oficial de pagamento.<br><strong style="color:rgba(255,255,255,.8)">${nomeLoja}</strong></p>
-  </div>
-</div>`;
+    <table width="100%" cellpadding="16" cellspacing="0" style="background:#f8f9fa;border:2px solid #e9ecef;border-radius:10px">
+      <tr>
+        <td style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#888888">Valor pago</td>
+        <td align="right" style="font-size:26px;font-weight:700;color:#16a34a">${valorFmt}</td>
+      </tr>
+    </table>
+  </td></tr>
+  <tr><td style="background:#1a1a3e;padding:16px 28px;text-align:center">
+    <p style="margin:0;font-size:11px;color:#8888aa;line-height:1.6">Este comprovante é um documento oficial de pagamento.<br><strong style="color:#ccccdd">${nomeLoja}</strong></p>
+  </td></tr>
+</table>`;
 }
 
 /* ═══════════════ BACKUP E SEGURANÇA ═══════════════ */
