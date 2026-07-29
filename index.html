@@ -3677,6 +3677,11 @@ async function init(){
   aplicarPerfil();
   renderDash();renderIrmaos();renderMensalidades();renderDoacoes();renderTaxasGorn();renderElTabela();renderSlTabela();renderTrTabela();renderTsTabela();
   registrarAcesso();
+  // Inicializar EmailJS com chaves salvas
+  try{
+    const pubkey=localStorage.getItem('ejs_pubkey');
+    if(pubkey)emailjs.init({publicKey:pubkey});
+  }catch(e){console.warn('EmailJS init:',e);}
   loading.classList.add('hidden');loading.classList.remove('active');setTimeout(()=>{},500);
   toast(`Bem-vindo, ${SESSAO.usuario?.nome?.split(' ')[0]||''}! ✓`,'ok',2500);
 }
