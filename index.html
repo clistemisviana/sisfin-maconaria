@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1220,6 +1221,42 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
         <button class="btn btn-primary btn-sm" onclick="salvarConfigIdentidade()">💾 Salvar</button>
       </div>
 
+      <!-- CARD EMAILJS -->
+      <div class="config-section" style="background:rgba(59,130,246,.04);border-color:rgba(59,130,246,.2)">
+        <h3>📧 Envio de Comprovantes por E-mail</h3>
+        <p style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:14px;line-height:1.6">
+          Configure sua conta <strong style="color:var(--blue)">EmailJS</strong> para enviar comprovantes de pagamento por e-mail diretamente do sistema. Gratuito até 200 envios/mês.
+        </p>
+        <div id="emailjs-status-bar" style="display:none;padding:8px 12px;border-radius:6px;font-size:11px;font-weight:600;margin-bottom:12px"></div>
+        <div class="fields-grid">
+          <div class="field grow">
+            <label>Service ID</label>
+            <input type="text" id="cfg-ejs-service" placeholder="service_xxxxxxx">
+          </div>
+          <div class="field grow">
+            <label>Template ID</label>
+            <input type="text" id="cfg-ejs-template" placeholder="template_xxxxxxx">
+          </div>
+          <div class="field grow">
+            <label>Public Key</label>
+            <input type="text" id="cfg-ejs-pubkey" placeholder="xxxxxxxxxxxxxxxxxxxx">
+          </div>
+          <div class="field grow">
+            <label>E-mail remetente <span style="color:rgba(255,255,255,.3);font-size:10px">(para exibir no rodapé)</span></label>
+            <input type="email" id="cfg-ejs-email-loja" placeholder="loja.filhosdafe@gmail.com">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+          <button class="btn btn-primary btn-sm" onclick="salvarCfgEmailJS()" style="background:rgba(59,130,246,.2);border-color:rgba(59,130,246,.4);color:var(--blue)">
+            💾 Salvar configuração
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="testarEmailJS()">📤 Enviar e-mail de teste</button>
+        </div>
+        <p style="font-size:10px;color:rgba(255,255,255,.3);margin:10px 0 0;line-height:1.6">
+          As chaves ficam salvas neste navegador. Crie sua conta gratuita em <strong style="color:rgba(255,255,255,.5)">emailjs.com</strong> e siga o guia de configuração.
+        </p>
+      </div>
+
       <!-- SALDOS INICIAIS — NOVO CAMPO -->
       <div class="config-section">
         <h3>🏦 Saldos Iniciais (ano anterior)</h3>
@@ -1255,6 +1292,7 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
           <div class="form-title" style="margin-bottom:10px"><div class="ft-bar" style="background:var(--blue)"></div><span id="cfg-ir-form-title">Novo Irmão</span></div>
           <div class="fields-grid">
             <div class="field grow"><label>Nome completo</label><input type="text" id="cfg-ir-nome" placeholder="Nome do irmão" oninput="cfgIrCheckBtn()"></div>
+            <div class="field grow"><label>E-mail <span style="color:rgba(255,255,255,.3);font-size:10px">(para envio de comprovantes)</span></label><input type="email" id="cfg-ir-email" placeholder="irmao@email.com"></div>
             <div class="field w140"><label>Status</label>
               <select id="cfg-ir-status" onchange="cfgIrStatusChange()"><option value="">— status —</option><option value="mensalista">Mensalista</option><option value="remido">Remido</option><option value="honorario">Honorário</option></select>
             </div>
@@ -1555,7 +1593,7 @@ async function dbLoad(){
       S.config.saldo_ant_loja=parseFloat(S.config.saldo_ant_loja)||0;
       S.config.saldo_ant_tronco=parseFloat(S.config.saldo_ant_tronco)||0;
     }
-    S.irmaos=(irm.data||[]).map(r=>({...r,acao:r.acao||null,regular_desde:r.regular_desde??null,irregular_desde:r.irregular_desde??null,kit_placet_desde:r.kit_placet_desde??null,mes_inicial:r.mes_inicial??null,data_reg:r.data_reg||null}));
+    S.irmaos=(irm.data||[]).map(r=>({...r,acao:r.acao||null,regular_desde:r.regular_desde??null,irregular_desde:r.irregular_desde??null,kit_placet_desde:r.kit_placet_desde??null,mes_inicial:r.mes_inicial??null,data_reg:r.data_reg||null,email:r.email||null}));
     S.entradasLoja=(el.data||[]).map(r=>({...r,ano:getAno(r.data),mesesRef:r.meses_ref||[],receb:r.recebedor,razao:r.razao,tipo:r.tipo,irmao:r.irmao,valor:parseFloat(r.valor),talao:r.talao===0||r.talao==='0'?'S/N':r.talao,impresso_em:r.impresso_em||null,tipo_taxa_gorn:r.tipo_taxa_gorn||null}));
     S.saidasLoja=(sl.data||[]).map(r=>({...r,cat:r.categoria,agapeTipo:r.agape_tipo,desc:r.descricao,fotos:r.fotos||[],valor:parseFloat(r.valor)}));
     S.troncoEntradas=(tr.data||[]).map(r=>({...r,ano:getAno(r.data),sessao:r.sessao,qtd:r.qtd,total:parseFloat(r.total),esp:parseFloat(r.esp||0),pix:parseFloat(r.pix||0),qtdpix:r.qtdpix||0,magna:r.magna}));
@@ -2771,7 +2809,7 @@ function renderElTabela(){
       <td class="sep">${mHtml}</td>
       <td class="right sep-accent" style="font-weight:700;color:var(--green)">${fmt(r.valor)}</td>
       <td class="center sep">${impresso}</td>
-      <td class="center sep"><div class="action-btns"><button class="act-btn edit" onclick="elEditarRegistro('${r.id}')">✏️</button><button class="act-btn del" onclick="elExcluirRegistro('${r.id}')">✕</button></div></td>`;
+      <td class="center sep"><div class="action-btns"><button class="act-btn" title="Enviar comprovante por e-mail" onclick="enviarComprovanteEmail('${r.id}')" style="color:var(--blue)">📧</button><button class="act-btn edit" onclick="elEditarRegistro('${r.id}')">✏️</button><button class="act-btn del" onclick="elExcluirRegistro('${r.id}')">✕</button></div></td>`;
     tbody.appendChild(tr);
   });
   // Linha total
@@ -2978,6 +3016,160 @@ function renderIrmaos(){
   });
 }
 
+/* ═══════════════ EMAILJS — COMPROVANTES ═══════════════ */
+function salvarCfgEmailJS(){
+  const service=document.getElementById('cfg-ejs-service').value.trim();
+  const template=document.getElementById('cfg-ejs-template').value.trim();
+  const pubkey=document.getElementById('cfg-ejs-pubkey').value.trim();
+  const emailLoja=document.getElementById('cfg-ejs-email-loja').value.trim();
+  if(!service||!template||!pubkey){toast('Preencha Service ID, Template ID e Public Key.','err');return;}
+  localStorage.setItem('ejs_service',service);
+  localStorage.setItem('ejs_template',template);
+  localStorage.setItem('ejs_pubkey',pubkey);
+  localStorage.setItem('ejs_email_loja',emailLoja);
+  emailjs.init({publicKey:pubkey});
+  mostrarStatusEmailJS(true);
+  toast('Configuração do EmailJS salva ✓');
+}
+
+function carregarCfgEmailJS(){
+  const service=localStorage.getItem('ejs_service')||'';
+  const template=localStorage.getItem('ejs_template')||'';
+  const pubkey=localStorage.getItem('ejs_pubkey')||'';
+  const emailLoja=localStorage.getItem('ejs_email_loja')||'';
+  const s=document.getElementById('cfg-ejs-service');if(s)s.value=service;
+  const t=document.getElementById('cfg-ejs-template');if(t)t.value=template;
+  const p=document.getElementById('cfg-ejs-pubkey');if(p)p.value=pubkey;
+  const e=document.getElementById('cfg-ejs-email-loja');if(e)e.value=emailLoja;
+  if(pubkey)emailjs.init({publicKey:pubkey});
+  mostrarStatusEmailJS(!!(service&&template&&pubkey));
+}
+
+function mostrarStatusEmailJS(configurado){
+  const bar=document.getElementById('emailjs-status-bar');
+  if(!bar)return;
+  if(configurado){
+    bar.style.display='block';
+    bar.style.background='rgba(34,211,160,.12)';
+    bar.style.border='1px solid rgba(34,211,160,.3)';
+    bar.style.color='var(--green)';
+    bar.textContent='✅ EmailJS configurado e pronto para envio';
+  }else{
+    bar.style.display='block';
+    bar.style.background='rgba(245,158,11,.1)';
+    bar.style.border='1px solid rgba(245,158,11,.25)';
+    bar.style.color='var(--orange)';
+    bar.textContent='⚠️ Configuração incompleta — preencha os campos abaixo';
+  }
+}
+
+async function testarEmailJS(){
+  const service=localStorage.getItem('ejs_service');
+  const template=localStorage.getItem('ejs_template');
+  const pubkey=localStorage.getItem('ejs_pubkey');
+  const emailLoja=localStorage.getItem('ejs_email_loja');
+  if(!service||!template||!pubkey){toast('Configure o EmailJS primeiro.','err');return;}
+  const emailTeste=prompt('Digite o e-mail para o teste:');
+  if(!emailTeste)return;
+  try{
+    toast('Enviando e-mail de teste...');
+    await emailjs.send(service,template,{
+      to_email:emailTeste,
+      to_name:'Ir∴ Teste',
+      assunto:'✅ Teste — Comprovante de Pagamento',
+      comprovante_html:gerarHtmlComprovante({
+        talao:'0000',irmao:'Irmão Teste',grau:'mestre',
+        razao:'mensalidade',mesesRef:[],data:new Date().toISOString().split('T')[0],
+        valor:35,tipo:'pix',receb:SESSAO.usuario?.nome||'Tesoureiro',ano:S.config.ano
+      }),
+      email_loja:emailLoja||'loja@email.com',
+      nome_loja:S.config.nome_loja||'Loja Filhos da Fé',
+    });
+    toast(`E-mail de teste enviado para ${emailTeste} ✓`,'ok',4000);
+  }catch(e){
+    toast('Erro ao enviar: '+e.text,'err',5000);
+    console.error('EmailJS erro:',e);
+  }
+}
+
+async function enviarComprovanteEmail(id){
+  const r=S.entradasLoja.find(x=>x.id===id);if(!r)return;
+  // Buscar irmão e email
+  const ir=S.irmaos.find(x=>x.nome===r.irmao);
+  const emailIrmao=ir?.email||null;
+  if(!emailIrmao){
+    toast(`Nenhum e-mail cadastrado para ${r.irmao.split(' ')[0]}. Edite o irmão nas Configurações.`,'err',5000);
+    return;
+  }
+  const service=localStorage.getItem('ejs_service');
+  const template=localStorage.getItem('ejs_template');
+  const pubkey=localStorage.getItem('ejs_pubkey');
+  const emailLoja=localStorage.getItem('ejs_email_loja')||'';
+  if(!service||!template||!pubkey){
+    toast('Configure o EmailJS nas Configurações antes de enviar.','err',5000);
+    return;
+  }
+  const RAZAO_LABEL={mensalidade:'Mensalidade',doacao:'Doação','taxa-gorn':'Taxa GORN',iniciacao:'Iniciação',elevacao:'Elevação',exaltacao:'Exaltação'};
+  const razaoStr=RAZAO_LABEL[r.razao]||r.razao;
+  const mesesStr=(r.mesesRef||[]).length?r.mesesRef.map(m=>{const mi=typeof m==='object'?m.mi:m;const mAno=typeof m==='object'?m.ano:r.ano;return`${MESES_NOMES[mi]} ${mAno}`;}).join(', '):'—';
+  const assunto=`✅ Comprovante de Pagamento — ${razaoStr}${mesesStr!=='—'?' ('+mesesStr+')':''}`;
+  try{
+    toast('Enviando comprovante...');
+    await emailjs.send(service,template,{
+      to_email:emailIrmao,
+      to_name:r.irmao,
+      assunto,
+      comprovante_html:gerarHtmlComprovante(r),
+      email_loja:emailLoja,
+      nome_loja:S.config.nome_loja||'Loja Filhos da Fé',
+    });
+    toast(`Comprovante enviado para ${emailIrmao} ✓`,'ok',4000);
+  }catch(e){
+    toast('Erro ao enviar: '+(e.text||e.message||'verifique as configurações do EmailJS'),'err',5000);
+    console.error('EmailJS erro:',e);
+  }
+}
+
+function gerarHtmlComprovante(r){
+  const GRAU_LABEL_EMAIL={aprendiz:'Aprendiz Maçom',companheiro:'Companheiro Maçom',mestre:'Mestre Maçom'};
+  const RAZAO_LABEL={mensalidade:'Mensalidade',doacao:'Doação','taxa-gorn':'Taxa GORN',iniciacao:'Iniciação',elevacao:'Elevação',exaltacao:'Exaltação'};
+  const ir=S.irmaos.find(x=>x.nome===r.irmao);
+  const grauLabel=GRAU_LABEL_EMAIL[ir?.grau||'mestre']||'Maçom';
+  const razaoStr=RAZAO_LABEL[r.razao]||r.razao;
+  const mesesStr=(r.mesesRef||[]).length?r.mesesRef.map(m=>{const mi=typeof m==='object'?m.mi:m;const mAno=typeof m==='object'?m.ano:r.ano;return`${MESES_NOMES[mi]} ${mAno}`;}).join(', '):'—';
+  const refStr=mesesStr!=='—'?`${razaoStr} — ${mesesStr}`:razaoStr;
+  const valorFmt=`R$ ${parseFloat(r.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+  const dataFmt=r.data?new Date(r.data+'T12:00:00').toLocaleDateString('pt-BR'):'—';
+  const tipoStr=r.tipo==='pix'?'PIX':'Espécie';
+  const nomeLoja=S.config.nome_loja||'Loja Filhos da Fé';
+  return `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.12)">
+  <div style="background:linear-gradient(135deg,#1a1a3e 0%,#2d2d6b 100%);padding:24px 28px 20px;text-align:center;color:#fff">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:5px">Loja Maçônica</div>
+    <div style="font-size:19px;font-weight:700;color:#fff;margin-bottom:6px">${nomeLoja}</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.06em;margin-bottom:3px">Fundada em 1899</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.38);letter-spacing:.03em">Rua Santo Antônio, 736, Cidade Alta, Natal - RN</div>
+    <div style="display:inline-block;margin-top:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 16px;font-size:11px;color:rgba(255,255,255,.8);letter-spacing:.06em">Comprovante Nº ${r.talao==='S/N'?'—':r.talao}</div>
+  </div>
+  <div style="background:#dcfce7;border-bottom:3px solid #16a34a;padding:10px 28px;text-align:center;font-size:12px;font-weight:700;color:#15803d;letter-spacing:.05em;text-transform:uppercase">✅ Pagamento Confirmado</div>
+  <div style="padding:24px 28px">
+    <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:4px">Ir∴ ${r.irmao}</div>
+    <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:20px">🔺 ${grauLabel}</div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.07em">Referência</span><span style="font-size:13px;font-weight:600;color:#222">${refStr}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.07em">Data do pagamento</span><span style="font-size:13px;font-weight:600;color:#222">${dataFmt}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.07em">Forma de pagamento</span><span style="font-size:13px;font-weight:600;color:#222">${tipoStr}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.07em">Recebido por</span><span style="font-size:13px;font-weight:600;color:#222">${r.receb||'Tesoureiro'}</span></div>
+    <div style="height:1px;background:#f0f0f0;margin:16px 0"></div>
+    <div style="background:#f8f9fa;border:2px solid #e9ecef;border-radius:10px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#888">Valor pago</span>
+      <span style="font-size:26px;font-weight:700;color:#16a34a">${valorFmt}</span>
+    </div>
+  </div>
+  <div style="background:#1a1a3e;padding:16px 28px;text-align:center">
+    <p style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.6;margin:0">Este comprovante é um documento oficial de pagamento.<br><strong style="color:rgba(255,255,255,.8)">${nomeLoja}</strong></p>
+  </div>
+</div>`;
+}
+
 /* ═══════════════ BACKUP E SEGURANÇA ═══════════════ */
 function registrarAcesso(){
   const hoje=new Date().toISOString().split('T')[0];
@@ -3161,6 +3353,7 @@ function checkSenha(){
     try{renderCfgUsuarios();}catch(e){console.error('renderCfgUsuarios:',e);}
     try{carregarUsoSupabase();}catch(e){console.error('carregarUsoSupabase:',e);}
     try{carregarInfoBackup();}catch(e){console.error('carregarInfoBackup:',e);}
+    try{carregarCfgEmailJS();}catch(e){console.error('carregarCfgEmailJS:',e);}
   }else{document.getElementById('cfg-erro').style.display='block';setTimeout(()=>document.getElementById('cfg-erro').style.display='none',2000);}
 }
 
@@ -3219,6 +3412,7 @@ async function cfgSalvarIrmao(){
   const nome=document.getElementById('cfg-ir-nome').value.trim();
   const status=document.getElementById('cfg-ir-status').value;
   const grau=document.getElementById('cfg-ir-grau').value;
+  const email=document.getElementById('cfg-ir-email').value.trim()||null;
   const acao=document.getElementById('cfg-ir-acao').value||null;
   const acaoMes=document.getElementById('cfg-ir-acao-mes').value;
   const irregular_desde=acao==='irregularizacao'&&acaoMes!==''?parseInt(acaoMes):null;
@@ -3228,14 +3422,14 @@ async function cfgSalvarIrmao(){
   const mes_inicial=document.getElementById('cfg-ir-mes-ini').value!==''?parseInt(document.getElementById('cfg-ir-mes-ini').value):null;
   try{
     if(S.cfgIrEditId){
-      await dbUpdate('irmaos',S.cfgIrEditId,{nome,status,grau,acao,irregular_desde,regular_desde,kit_placet_desde,data_reg,mes_inicial});
+      await dbUpdate('irmaos',S.cfgIrEditId,{nome,email,status,grau,acao,irregular_desde,regular_desde,kit_placet_desde,data_reg,mes_inicial});
       const idx=S.irmaos.findIndex(r=>r.id===S.cfgIrEditId);
-      if(idx>=0)S.irmaos[idx]={...S.irmaos[idx],nome,status,grau,acao,irregular_desde,regular_desde,kit_placet_desde,data_reg,mes_inicial};
+      if(idx>=0)S.irmaos[idx]={...S.irmaos[idx],nome,email,status,grau,acao,irregular_desde,regular_desde,kit_placet_desde,data_reg,mes_inicial};
       S.cfgIrEditId=null;document.getElementById('cfg-ir-form-title').textContent='Novo Irmão';document.getElementById('cfg-ir-btn').textContent='＋ Cadastrar';document.getElementById('cfg-ir-cancel-btn').style.display='none';toast('Irmão atualizado ✓');
     }else{
-      const{data:row,error}=await db.from('irmaos').insert({nome,status,grau,acao,irregular_desde,regular_desde,kit_placet_desde,data_reg,mes_inicial}).select().single();if(error)throw error;S.irmaos.push(row);toast('Irmão cadastrado ✓');
+      const{data:row,error}=await db.from('irmaos').insert({nome,email,status,grau,acao,irregular_desde,regular_desde,kit_placet_desde,data_reg,mes_inicial}).select().single();if(error)throw error;S.irmaos.push(row);toast('Irmão cadastrado ✓');
     }
-    ['cfg-ir-nome','cfg-ir-status','cfg-ir-grau','cfg-ir-acao','cfg-ir-acao-mes','cfg-ir-mes-ini'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    ['cfg-ir-nome','cfg-ir-email','cfg-ir-status','cfg-ir-grau','cfg-ir-acao','cfg-ir-acao-mes','cfg-ir-mes-ini'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     ['cfg-ir-acao-mes-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     document.getElementById('cfg-ir-btn').disabled=true;
     renderCfgIrmaos();renderIrmaos();populateIrmaoSelect();
@@ -3245,6 +3439,7 @@ function cfgEditarIrmao(id){
   const ir=S.irmaos.find(x=>x.id===id);if(!ir)return;
   S.cfgIrEditId=id;document.getElementById('cfg-ir-form-title').textContent='Editar Irmão';document.getElementById('cfg-ir-btn').textContent='💾 Salvar';document.getElementById('cfg-ir-cancel-btn').style.display='';
   document.getElementById('cfg-ir-nome').value=ir.nome;
+  document.getElementById('cfg-ir-email').value=ir.email||'';
   document.getElementById('cfg-ir-status').value=ir.status||'mensalista';
   document.getElementById('cfg-ir-grau').value=ir.grau;
   document.getElementById('cfg-ir-mes-ini').value=ir.mes_inicial!=null?ir.mes_inicial:'';
@@ -3270,7 +3465,7 @@ function cfgEditarIrmao(id){
 }
 function cfgCancelarEdicaoIrmao(){
   S.cfgIrEditId=null;document.getElementById('cfg-ir-form-title').textContent='Novo Irmão';document.getElementById('cfg-ir-btn').textContent='＋ Cadastrar';document.getElementById('cfg-ir-cancel-btn').style.display='none';
-  ['cfg-ir-nome','cfg-ir-status','cfg-ir-grau','cfg-ir-acao','cfg-ir-acao-mes','cfg-ir-mes-ini'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['cfg-ir-nome','cfg-ir-email','cfg-ir-status','cfg-ir-grau','cfg-ir-acao','cfg-ir-acao-mes','cfg-ir-mes-ini'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const wrap=document.getElementById('cfg-ir-acao-mes-wrap');if(wrap)wrap.style.display='none';
   document.getElementById('cfg-ir-btn').disabled=true;
 }
@@ -3292,7 +3487,8 @@ function renderCfgIrmaos(){
     const irregDesde=ir.irregular_desde!=null?MESES_NOMES[ir.irregular_desde]:'—';
     const placetDesde=ir.kit_placet_desde!=null?MESES_NOMES[ir.kit_placet_desde]:'—';
     const mesIni=ir.mes_inicial!=null?MESES_NOMES[ir.mes_inicial]:'—';
-    tr.innerHTML=`<td><span class="irmao-avatar" style="width:24px;height:24px;font-size:10px">${ini}</span>${ir.nome}</td>
+    const emailHtml=ir.email?`<div style="font-size:10px;color:rgba(255,255,255,.35);margin-left:32px;margin-top:2px">${ir.email}</div>`:'';
+    tr.innerHTML=`<td><span class="irmao-avatar" style="width:24px;height:24px;font-size:10px">${ini}</span>${ir.nome}${emailHtml}</td>
       <td class="center sep"><span class="chip ${getStatusChip(ir)}">${getStatusLabel(ir)}</span></td>
       <td class="center sep"><span class="chip ${GRAU_CHIP[ir.grau]}">${GRAU_LABEL[ir.grau]}</span></td>
       <td class="center sep" style="font-size:11px;color:rgba(255,255,255,.5)">${regularDesde}</td>
