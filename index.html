@@ -150,6 +150,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .cards-row.c3{grid-template-columns:1fr 1fr 1fr}
 .cards-row.c4{grid-template-columns:1fr 1fr 1fr 1fr}
 .cards-row.c5{grid-template-columns:repeat(5,1fr)}
+.cards-row.c6{grid-template-columns:repeat(6,1fr)}
 .kpi{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--r);padding:14px 16px;backdrop-filter:blur(8px)}
 .kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-bottom:6px}
 .kpi-val{font-size:22px;font-weight:900;line-height:1;letter-spacing:-.02em}
@@ -454,6 +455,7 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
   .agape-info-row{grid-template-columns:1fr 1fr 1fr}
   .cards-row.c4{grid-template-columns:1fr 1fr}
   .cards-row.c5{grid-template-columns:repeat(3,1fr)}
+  .cards-row.c6{grid-template-columns:repeat(3,1fr)}
 }
 
 /* ═══ MOBILE (max 768px) — portrait e landscape ═══ */
@@ -472,6 +474,7 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
   .cards-row.c3{grid-template-columns:1fr 1fr}
   .cards-row.c4{grid-template-columns:1fr 1fr}
   .cards-row.c5{grid-template-columns:1fr 1fr}
+  .cards-row.c6{grid-template-columns:1fr 1fr}
   .kpi{padding:10px 12px}
   .kpi-val{font-size:16px}
   .kpi-label{font-size:9px}
@@ -1100,12 +1103,13 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
   <!-- IRMÃOS -->
   <div class="page" id="page-irmaos">
     <div class="sec-div">Irmãos</div>
-    <div class="cards-row c5" style="margin-bottom:18px">
+    <div class="cards-row c6" style="margin-bottom:18px">
       <div class="kpi" style="border-color:rgba(34,211,160,.2)"><div class="kpi-label">👥 Total</div><div class="kpi-val" id="ir-stat-total" style="color:var(--text)">0</div><div class="kpi-sub">cadastrados</div></div>
       <div class="kpi" style="border-color:rgba(34,211,160,.25)"><div class="kpi-label" style="color:var(--green)">💚 Mensalistas</div><div class="kpi-val" id="ir-stat-mens" style="color:var(--green)">0</div><div class="kpi-sub" id="ir-stat-mens-pct">0%</div></div>
       <div class="kpi" style="border-color:rgba(96,165,250,.2)"><div class="kpi-label" style="color:var(--blue)">🔵 Remidos</div><div class="kpi-val" id="ir-stat-rem" style="color:var(--blue)">0</div><div class="kpi-sub" id="ir-stat-rem-pct">0%</div></div>
       <div class="kpi" style="border-color:rgba(245,158,11,.2)"><div class="kpi-label" style="color:var(--orange)">⭐ Honorários</div><div class="kpi-val" id="ir-stat-hon" style="color:var(--orange)">0</div><div class="kpi-sub" id="ir-stat-hon-pct">0%</div></div>
       <div class="kpi" style="border-color:rgba(239,68,68,.2)"><div class="kpi-label" style="color:var(--red)">⚠️ Irregulares</div><div class="kpi-val" id="ir-stat-irreg" style="color:var(--red)">0</div><div class="kpi-sub" id="ir-stat-irreg-pct">0%</div></div>
+      <div class="kpi" style="border-color:rgba(168,85,247,.25)"><div class="kpi-label" style="color:#a855f7">🟣 Placetados</div><div class="kpi-val" id="ir-stat-plac" style="color:#a855f7">0</div><div class="kpi-sub" id="ir-stat-plac-pct">0%</div></div>
     </div>
     <p style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:12px">Visualização. Para gerenciar acesse <strong style="color:var(--violet2);cursor:pointer" onclick="navigateTo('config')">Configurações</strong>.</p>
     <div class="tbl-top">
@@ -2143,24 +2147,28 @@ function renderDashInadimplencia(mesesFilt){
       if(mAno===ano){const k=`${r.irmao}|${mi}`;pagMap[k]=(pagMap[k]||0)+1;}
     });
   });
-  const mensalistas=S.irmaos.filter(ir=>ir.status==='mensalista'||ir.status==='irregular');
-  const total=mensalistas.length;
+  // Headline: só mensalistas ativos (placetado/irregular não contam aqui)
+  const totalMensalistas=S.irmaos.filter(ir=>getStatusReal(ir)==='mensalista').length;
+  // Universo de cobrança: quem tinha obrigação em algum mês encerrado.
+  // Placetado/irregular entram pelos meses ANTERIORES à ação — devePargarMes já corta o resto.
+  const obrigados=S.irmaos.filter(ir=>mesesBase.some(mi=>devePargarMes(ir,mi)));
   let deveSet=new Set();let qtdAbertas=0;let valorAbertas=0;
-  mensalistas.forEach(ir=>{
+  obrigados.forEach(ir=>{
     mesesBase.forEach(mi=>{
       if(!devePargarMes(ir,mi))return;
       if(!pagMap[`${ir.nome}|${mi}`]){deveSet.add(ir.nome);qtdAbertas++;valorAbertas+=getMensVal(mi);}
     });
   });
-  const pagaram=total-deveSet.size;
-  const pct=total>0?Math.round(pagaram/total*100):0;
+  // "Em dia" medido sobre os mensalistas ativos
+  const emDia=S.irmaos.filter(ir=>getStatusReal(ir)==='mensalista'&&!deveSet.has(ir.nome)).length;
+  const pct=totalMensalistas>0?Math.round(emDia/totalMensalistas*100):0;
   document.getElementById('dash-inad-devem').textContent=deveSet.size;
   document.getElementById('dash-inad-devem-sub').textContent=deveSet.size===1?'irmão':'irmãos';
   document.getElementById('dash-inad-abertas').textContent=qtdAbertas;
   document.getElementById('dash-inad-valor').textContent=fmt(valorAbertas);
-  document.getElementById('dash-inad-pag').textContent=pagaram;
+  document.getElementById('dash-inad-pag').textContent=emDia;
   document.getElementById('dash-inad-pag-sub').textContent='pagaram em dia';
-  document.getElementById('dash-inad-sub').textContent=`${total} mensalistas`;
+  document.getElementById('dash-inad-sub').textContent=`${totalMensalistas} mensalistas`;
   document.getElementById('dash-inad-barra').style.width=pct+'%';
   document.getElementById('dash-inad-barra').style.background=pct>=80?'var(--green)':pct>=60?'var(--orange)':'var(--red)';
   document.getElementById('dash-inad-pct').textContent=pct+'%';
@@ -2285,11 +2293,12 @@ function renderMensalidades(){
   const colTotals2025={};const colTotals2026=Array(12).fill(0);const colDividas=Array(12).fill(0);
 
   listaFinal.forEach(ir=>{
-    const isIrreg=ir.status==='irregular';const tr=document.createElement('tr');if(isIrreg)tr.classList.add('row-irregular');
+    const stReal=getStatusReal(ir);const isIrreg=stReal==='irregular';const tr=document.createElement('tr');if(isIrreg)tr.classList.add('row-irregular');
     const tdN=document.createElement('td');let badge='';
-    if(ir.status==='remido')badge='<span class="chip chip-remido" style="margin-left:5px">Remido</span>';
-    else if(ir.status==='honorario')badge='<span class="chip chip-honorario" style="margin-left:5px">Honorário</span>';
-    else if(ir.status==='irregular')badge='<span class="chip chip-irregular" style="margin-left:5px">Irregular</span>';
+    if(stReal==='remido')badge='<span class="chip chip-remido" style="margin-left:5px">Remido</span>';
+    else if(stReal==='honorario')badge='<span class="chip chip-honorario" style="margin-left:5px">Honorário</span>';
+    else if(stReal==='irregular')badge='<span class="chip chip-irregular" style="margin-left:5px">Irregular</span>';
+    else if(stReal==='placetado')badge='<span class="chip chip-placetado" style="margin-left:5px">Placetado</span>';
     tdN.innerHTML=ir.nome+badge;tr.appendChild(tdN);
     let rowTotal=0;let rowDivida=0;
 
@@ -3000,13 +3009,16 @@ function renderTsTabela(){
 /* ═══════════════ IRMÃOS ═══════════════ */
 function renderIrmaos(){
   const lista=irmaosOrdenados();const total=lista.length;const pct=n=>total>0?Math.round(n/total*100)+'% do total':'0%';
-  const mens=lista.filter(i=>i.status==='mensalista').length;const rem=lista.filter(i=>i.status==='remido').length;
-  const hon=lista.filter(i=>i.status==='honorario').length;const irreg=lista.filter(i=>i.status==='irregular').length;
+  // Contagem pelo status REAL: placetado/irregular saem da conta de mensalistas
+  const mens=lista.filter(i=>getStatusReal(i)==='mensalista').length;const rem=lista.filter(i=>getStatusReal(i)==='remido').length;
+  const hon=lista.filter(i=>getStatusReal(i)==='honorario').length;const irreg=lista.filter(i=>getStatusReal(i)==='irregular').length;
+  const plac=lista.filter(i=>getStatusReal(i)==='placetado').length;
   document.getElementById('ir-stat-total').textContent=total;
   document.getElementById('ir-stat-mens').textContent=mens;document.getElementById('ir-stat-mens-pct').textContent=pct(mens);
   document.getElementById('ir-stat-rem').textContent=rem;document.getElementById('ir-stat-rem-pct').textContent=pct(rem);
   document.getElementById('ir-stat-hon').textContent=hon;document.getElementById('ir-stat-hon-pct').textContent=pct(hon);
   document.getElementById('ir-stat-irreg').textContent=irreg;document.getElementById('ir-stat-irreg-pct').textContent=pct(irreg);
+  document.getElementById('ir-stat-plac').textContent=plac;document.getElementById('ir-stat-plac-pct').textContent=pct(plac);
   document.getElementById('ir-badge').textContent=total+' irmão'+(total!==1?'s':'');
   const tbody=document.getElementById('ir-tbody');
   if(!lista.length){tbody.innerHTML='<tr class="empty-row"><td colspan="4">Nenhum irmão cadastrado.</td></tr>';return;}
