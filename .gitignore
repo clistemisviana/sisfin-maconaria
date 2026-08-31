@@ -1,0 +1,18 @@
+# Documento de referencia interno — NAO vai para o repositorio publico
+# (contem ref do Supabase, IDs do EmailJS e detalhes de arquitetura)
+briefing-sisfin-claudecode.md
+
+# Backups locais gerados pelo sistema
+backup-*.json
+*.backup.json
+
+# Lixo de SO / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.vscode/
+.idea/
+
+# Node (nao ha build, mas por seguranca se algum dia instalar libs)
+node_modules/

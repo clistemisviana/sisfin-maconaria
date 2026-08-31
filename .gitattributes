@@ -1,0 +1,7 @@
+# Normaliza quebras de linha: repositorio sempre em LF, sem CRLF do Windows
+* text=auto eol=lf
+*.html text eol=lf
+*.md   text eol=lf
+*.sql  text eol=lf
+*.mjs  text eol=lf
+*.js   text eol=lf
