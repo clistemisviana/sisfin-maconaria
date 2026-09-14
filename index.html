@@ -190,6 +190,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mes-chip{padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
 .mes-chip:hover{border-color:var(--violet2);color:var(--violet2)}
 .mes-chip.sel{background:var(--violet);border-color:var(--violet);color:#fff}
+.mes-chip.pago{background:rgba(34,211,160,.12);border-color:rgba(34,211,160,.4);color:var(--green)}
+.mes-chip.pago:hover{border-color:var(--green);color:var(--green)}
 .ano-pill{padding:4px 12px;border-radius:20px;background:rgba(139,92,246,.15);color:var(--violet2);font-size:11px;font-weight:700;border:1px solid rgba(139,92,246,.3)}
 
 /* AGAPE SUB / MAGNA */
@@ -2640,19 +2642,37 @@ function elSelecionarAno(qual){
   elAtualizarMesesTags();elCheckBtn();
 }
 
+// Meses de mensalidade que o irmao selecionado ja pagou (chave "mi|ano")
+function elMesesPagos(irmao){
+  const set=new Set();
+  if(!irmao)return set;
+  S.entradasLoja.filter(r=>r.razao==='mensalidade'&&r.irmao===irmao).forEach(r=>{
+    (r.mesesRef||[]).forEach(m=>{
+      const mi=typeof m==='object'?m.mi:m;
+      const ano=typeof m==='object'?(m.ano||r.ano):r.ano;
+      set.add(`${mi}|${ano}`);
+    });
+  });
+  return set;
+}
+
 function buildMesesChips(containerEl,onChange){
   if(!containerEl)return;
   containerEl.innerHTML='';
   const anoVis=S.elMesesAno==='atual'?S.config.ano:S.config.ano-1;
+  const irmaoSel=document.getElementById('el-irmao')?.value||'';
+  const pagos=elMesesPagos(irmaoSel);
   MESES_NOMES.forEach((m,i)=>{
     const selecionado=S.elMesesSel.some(x=>x.mi===i&&x.ano===anoVis);
+    const pago=!selecionado&&pagos.has(`${i}|${anoVis}`);
     const btn=document.createElement('button');
-    btn.className='mes-chip'+(selecionado?' sel':'');
+    btn.className='mes-chip'+(selecionado?' sel':pago?' pago':'');
+    if(pago)btn.title='Já pago por este irmão';
     btn.textContent=m;btn.type='button';
     btn.onclick=()=>{
       const idx=S.elMesesSel.findIndex(x=>x.mi===i&&x.ano===anoVis);
-      if(idx>=0){S.elMesesSel.splice(idx,1);btn.classList.remove('sel');}
-      else{S.elMesesSel.push({mi:i,ano:anoVis});btn.classList.add('sel');}
+      if(idx>=0){S.elMesesSel.splice(idx,1);btn.classList.remove('sel');if(pagos.has(`${i}|${anoVis}`))btn.classList.add('pago');}
+      else{S.elMesesSel.push({mi:i,ano:anoVis});btn.classList.add('sel');btn.classList.remove('pago');}
       elAtualizarMesesTags();onChange&&onChange();
     };
     containerEl.appendChild(btn);
@@ -3791,6 +3811,10 @@ window.addEventListener('DOMContentLoaded',async()=>{
     elCheckBtn();
   });
   ['el-irmao','el-tipo','el-receb','el-valor','el-data'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',elCheckBtn);});
+  const elIrmaoSel=document.getElementById('el-irmao');
+  if(elIrmaoSel)elIrmaoSel.addEventListener('change',()=>{
+    if(document.getElementById('el-razao').value==='mensalidade')buildMesesChips(document.getElementById('el-meses-chips'),elCheckBtn);
+  });
   ['sl-data','sl-valor'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',slCheckBtn);});
   const slCatEl=document.getElementById('sl-cat');if(slCatEl)slCatEl.addEventListener('change',slCatChange);
   ['tr-data','tr-sessao','tr-qtd','tr-total','tr-esp','tr-qtdpix','tr-magna'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',trCheckBtn);});
