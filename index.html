@@ -638,6 +638,53 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
   </div>
 </div>
 
+<!-- MODAL RELATÓRIOS -->
+<div class="modal-overlay" id="rel-modal-overlay">
+  <div class="modal-box" style="max-width:400px;text-align:left">
+    <div class="modal-title" style="text-align:center;margin-bottom:16px">📄 Gerar Relatório</div>
+    <div class="field" style="margin-bottom:10px">
+      <label>Caixa</label>
+      <select id="rel-caixa" onchange="relAtualizarModal()">
+        <option value="loja">Loja</option>
+        <option value="tronco">Tronco de Beneficência</option>
+        <option value="agape">Ágape</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:10px">
+      <label>Período</label>
+      <select id="rel-periodo" onchange="relAtualizarModal()">
+        <option value="mensal">Mensal</option>
+        <option value="trimestral">Trimestral</option>
+        <option value="anual">Anual</option>
+      </select>
+    </div>
+    <div class="field" id="rel-mes-wrap" style="margin-bottom:10px">
+      <label>Mês</label>
+      <select id="rel-mes"></select>
+    </div>
+    <div class="field" id="rel-tri-wrap" style="margin-bottom:10px;display:none">
+      <label>Trimestre</label>
+      <select id="rel-tri">
+        <option value="1">1º Trimestre (Jan–Mar)</option>
+        <option value="2">2º Trimestre (Abr–Jun)</option>
+        <option value="3">3º Trimestre (Jul–Set)</option>
+        <option value="4">4º Trimestre (Out–Dez)</option>
+      </select>
+    </div>
+    <div class="field" id="rel-modo-wrap" style="margin-bottom:18px">
+      <label>Modo</label>
+      <select id="rel-modo">
+        <option value="simples">Simples</option>
+        <option value="detalhado">Detalhado</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost btn-sm" onclick="closeRelModal()">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="relGerar()">⬇ Gerar PDF</button>
+    </div>
+  </div>
+</div>
+
 <!-- BOTÃO MENU MOBILE -->
 <button class="menu-toggle" id="menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">☰</button>
 <!-- OVERLAY MOBILE -->
@@ -692,7 +739,7 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
     <div class="tb-right">
       <span class="tb-perfil admin" id="tb-perfil-badge">Admin</span>
       <span class="tb-badge"><span class="sync-indicator" id="sync-dot"></span>📅 <span id="tb-ano">2026</span></span>
-      <button class="tb-btn" onclick="window.print()">⬇ PDF</button>
+      <button class="tb-btn" onclick="abrirModalRelatorio()">📄 Relatórios</button>
       <button class="tb-logout" onclick="fazerLogout()">Sair</button>
     </div>
   </header>
@@ -3754,6 +3801,382 @@ function initSearchClearButtons(){
     wrap.appendChild(btn);
     inp.addEventListener('input',()=>btn.classList.toggle('show',inp.value.length>0));
   });
+}
+
+/* ═══════════════ RELATÓRIOS ═══════════════ */
+const REL_RECEITA_GRUPOS=[
+  {key:'mensalidade',label:'Mensalidades',razoes:['mensalidade']},
+  {key:'doacao',label:'Doações',razoes:['doacao']},
+  {key:'taxa-gorn',label:'Taxa GORN',razoes:['taxa-gorn']},
+  {key:'iee',label:'Iniciação / Elevação / Exaltação',razoes:['iniciacao','elevacao','exaltacao']},
+];
+const REL_RAZAO_TIPO_LABEL={iniciacao:'Iniciação',elevacao:'Elevação',exaltacao:'Exaltação'};
+const REL_DESPESA_ORDEM=['gorn','agape','iptu-grupo','admin','seguranca','cosern','manutencao','manutencao-bb','caern','eventos','outros','limpeza'];
+const REL_DESPESA_LABEL={gorn:'Repasse GORN',agape:'Ágape','iptu-grupo':'IPTU / Negociação',admin:'Administrativo',seguranca:'Segurança',cosern:'COSERN (energia)',manutencao:'Manutenção','manutencao-bb':'Manutenção Conta BB',caern:'CAERN (água)',eventos:'Eventos',outros:'Outros',limpeza:'Limpeza'};
+// modo de abertura no relatorio Detalhado: descricao | agape-split | iptu-split | manutbb-split
+const REL_DESPESA_ABRE={gorn:'descricao',agape:'agape-split','iptu-grupo':'iptu-split',manutencao:'descricao',eventos:'descricao','manutencao-bb':'manutbb-split',outros:'descricao',admin:'descricao'};
+
+const REL_CSS=`:root{--ink:#1a1a2e;--soft:#5b5b73;--line:#d8d8e2;--line2:#ebebf1;--accent:#7c3aed;--green:#0f7d54;--red:#c0392b;--head:#f3f2f8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);font-size:12.5px;line-height:1.4;padding:24px}
+.rpt-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid var(--ink);padding-bottom:14px;margin-bottom:6px}
+.rpt-head .lodge{font-family:Georgia,"Times New Roman",serif}
+.rpt-head .lodge b{font-size:17px;letter-spacing:.02em;display:block}
+.rpt-head .lodge span{font-size:11px;color:var(--soft)}
+.rpt-head .emblem{width:52px;height:52px;border:2px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.rpt-title{text-align:center;margin:16px 0 22px}
+.rpt-title b{font-size:15px;letter-spacing:.09em;text-transform:uppercase;display:block}
+.rpt-title span{font-size:12px;color:var(--soft)}
+table{width:100%;border-collapse:collapse;margin-bottom:8px;page-break-inside:avoid}
+caption{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);padding:16px 0 7px}
+th,td{padding:4px 7px;font-variant-numeric:tabular-nums}
+thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--soft);border-bottom:1.5px solid var(--ink);text-align:right}
+thead th:first-child{text-align:left}
+tbody td{border-bottom:1px solid var(--line2);text-align:right}
+tbody td:first-child{text-align:left}
+.grp td{background:var(--head);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line)}
+.cat td{font-weight:700}
+.det td{color:#8a8a9a;font-size:11px}
+.det td:first-child{padding-left:20px}
+.tot td{font-weight:700;border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink)}
+.res td{font-weight:700}
+.res td:first-child{text-transform:uppercase;font-size:10.5px;letter-spacing:.04em}
+.sal{background:#f6f3ff}
+.sal td{font-weight:800;border-top:2px solid var(--accent);border-bottom:2px solid var(--accent)}
+.sal td:first-child{text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;color:var(--accent)}
+.opening td{font-weight:700;border-bottom:1px dashed var(--line)}
+.cons{border-left:2px solid var(--accent);font-weight:700}
+th.cons{color:var(--accent)}
+.pos{color:var(--green)} .neg{color:var(--red)}
+.dash{color:#ccc}
+.obs{font-size:11px;color:var(--soft);margin-top:2px}
+.foot{display:flex;gap:40px;margin-top:46px;page-break-inside:avoid}
+.sig{flex:1;text-align:center;border-top:1px solid var(--ink);padding-top:6px;font-size:11px;color:var(--soft)}
+.pgnote{margin-top:20px;font-size:10px;color:#999;text-align:center}
+.annex-title{margin-top:30px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;border-top:1.5px solid var(--ink);padding-top:12px}
+@page{size:A4 portrait;margin:14mm}
+@media print{body{padding:0}}`;
+
+function relN(v){return Math.abs(v)<0.005?'<span class="dash">—</span>':Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function relNC(v){if(Math.abs(v)<0.005)return'<span class="dash">—</span>';const s=v>=0?'+':'−';return`<span class="${v>=0?'pos':'neg'}">${s}${Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`;}
+
+function relColunasPeriodo(tipo,valor){
+  if(tipo==='mensal'){const mi=parseInt(valor);return[{label:MESES_NOMES[mi],meses:[mi]}];}
+  if(tipo==='trimestral'){const tri=parseInt(valor);const base=(tri-1)*3;return[0,1,2].map(i=>({label:MESES_NOMES[base+i],meses:[base+i]}));}
+  return[0,1,2,3].map(t=>({label:`${t+1}º Tri`,meses:[t*3,t*3+1,t*3+2]}));
+}
+function relTituloPeriodo(tipo,valor){
+  const ano=S.config.ano;
+  if(tipo==='mensal')return`${MESES_NOMES[parseInt(valor)]} de ${ano}`;
+  if(tipo==='trimestral'){const t=parseInt(valor);const nomes=['Jan–Mar','Abr–Jun','Jul–Set','Out–Dez'];return`${t}º Trimestre de ${ano} (${nomes[t-1]})`;}
+  return`Exercício ${ano}`;
+}
+function relDataHoje(){const d=new Date();return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
+function relTableHeaders(colunasDef,multiColuna,periodoTipo){
+  return colunasDef.map(c=>`<th>${c.label}</th>`).join('')+(multiColuna?`<th class="cons">${periodoTipo==='anual'?'Ano':'Consolidado'}</th>`:'');
+}
+function relCabecalho(){
+  return`<div class="rpt-head"><div class="lodge"><b>${S.config.nome_loja||'Loja Maçônica'}</b><span>Rua Santo Antônio, 736 — Cidade Alta — Natal/RN · Fundada em 1899</span></div><div class="emblem">⌖</div></div>`;
+}
+
+/* ── Loja ── */
+function relLojaAgregar(meses,ano){
+  const ent=S.entradasLoja.filter(r=>r.ano===ano&&meses.includes(getMesIdx(r.data)));
+  const sai=S.saidasLoja.filter(r=>getAno(r.data)===ano&&meses.includes(getMesIdx(r.data)));
+  const receitas={},receitasDet={};
+  ent.forEach(r=>{
+    const grupo=REL_RECEITA_GRUPOS.find(g=>g.razoes.includes(r.razao));
+    const key=grupo?grupo.key:r.razao;
+    receitas[key]=(receitas[key]||0)+r.valor;
+    if(key==='doacao'||key==='taxa-gorn'||key==='iee'){
+      receitasDet[key]=receitasDet[key]||{};
+      const label=key==='iee'?`${r.irmao} — ${REL_RAZAO_TIPO_LABEL[r.razao]}`:r.irmao;
+      receitasDet[key][label]=(receitasDet[key][label]||0)+r.valor;
+    }
+  });
+  const despesas={},despesasDet={};
+  sai.forEach(r=>{
+    const key=(r.cat==='iptu'||r.cat==='iptu-neg')?'iptu-grupo':(r.cat||'outros');
+    despesas[key]=(despesas[key]||0)+r.valor;
+    const modo=REL_DESPESA_ABRE[key];
+    if(modo){
+      despesasDet[key]=despesasDet[key]||{};
+      let label;
+      if(modo==='agape-split')label=r.agapeTipo==='mao-de-obra'?'Mão de obra':'Compras';
+      else if(modo==='iptu-split')label=r.cat==='iptu'?'IPTU':'IPTU Negociado';
+      else if(modo==='manutbb-split')label=/manuten/i.test(r.desc||'')?'Taxa de Manutenção da Conta BB':'Tarifa BB';
+      else label=r.desc||'(sem descrição)';
+      despesasDet[key][label]=(despesasDet[key][label]||0)+r.valor;
+    }
+  });
+  const totalReceitas=Object.values(receitas).reduce((s,v)=>s+v,0);
+  const totalDespesas=Object.values(despesas).reduce((s,v)=>s+v,0);
+  return{receitas,receitasDet,despesas,despesasDet,totalReceitas,totalDespesas,resultado:totalReceitas-totalDespesas};
+}
+function relLojaLinhasReceita(todasAgs){
+  const chaves=new Set();todasAgs.forEach(a=>Object.keys(a.receitas).forEach(k=>chaves.add(k)));
+  const fixos=['mensalidade','doacao','taxa-gorn','iee'];
+  const extras=[...chaves].filter(k=>!fixos.includes(k));
+  return[...fixos,...extras].map(key=>{
+    const grupo=REL_RECEITA_GRUPOS.find(g=>g.key===key);
+    return{key,label:grupo?grupo.label:key,valores:todasAgs.map(a=>a.receitas[key]||0)};
+  });
+}
+function relLojaLinhasDespesa(todasAgs){
+  const chaves=new Set();todasAgs.forEach(a=>Object.keys(a.despesas).forEach(k=>chaves.add(k)));
+  const extras=[...chaves].filter(k=>!REL_DESPESA_ORDEM.includes(k));
+  const todasChaves=[...REL_DESPESA_ORDEM.filter(k=>chaves.has(k)),...extras];
+  return todasChaves.map(key=>({
+    key,label:REL_DESPESA_LABEL[key]||CAT_LABEL[key]||key,
+    valores:todasAgs.map(a=>a.despesas[key]||0),
+    detalhe:REL_DESPESA_ABRE[key]?relMergeDetalhe(todasAgs,key):null
+  }));
+}
+function relMergeDetalhe(todasAgs,key){
+  const labels=new Set();todasAgs.forEach(a=>{if(a.despesasDet[key])Object.keys(a.despesasDet[key]).forEach(l=>labels.add(l));});
+  let ordered;
+  if(key==='agape')ordered=['Mão de obra','Compras'];
+  else if(key==='iptu-grupo')ordered=['IPTU','IPTU Negociado'];
+  else if(key==='manutencao-bb')ordered=['Taxa de Manutenção da Conta BB','Tarifa BB'];
+  else ordered=[...labels].sort();
+  return ordered.map(label=>({label,valores:todasAgs.map(a=>(a.despesasDet[key]&&a.despesasDet[key][label])||0)}));
+}
+function relMergeDetalheReceita(todasAgs,key){
+  const labels=new Set();todasAgs.forEach(a=>{if(a.receitasDet[key])Object.keys(a.receitasDet[key]).forEach(l=>labels.add(l));});
+  return[...labels].sort().map(label=>({label,valores:todasAgs.map(a=>(a.receitasDet[key]&&a.receitasDet[key][label])||0)}));
+}
+function relMensalidadePeriodo(meses,ano){
+  const pagMap={};
+  S.entradasLoja.filter(r=>r.razao==='mensalidade').forEach(r=>{
+    (r.mesesRef||[]).forEach(m=>{
+      const rmi=typeof m==='object'?m.mi:m;const rano=typeof m==='object'?(m.ano||r.ano):r.ano;
+      if(rano===ano)pagMap[`${r.irmao}|${rmi}`]=true;
+    });
+  });
+  return meses.map(mi=>{
+    let previsto=0,recebido=0;const devedores=[];
+    S.irmaos.forEach(ir=>{
+      if(!devePargarMes(ir,mi))return;
+      previsto+=getMensVal(mi);
+      if(pagMap[`${ir.nome}|${mi}`])recebido+=getMensVal(mi);else devedores.push(ir.nome);
+    });
+    return{mi,previsto,recebido,emAberto:previsto-recebido,devedores,adimplencia:previsto>0?Math.round(recebido/previsto*100):100};
+  });
+}
+
+function relGerarHtmlLoja(periodoTipo,periodoValor,modo){
+  const ano=S.config.ano;
+  const colunasDef=relColunasPeriodo(periodoTipo,periodoValor);
+  const multiColuna=colunasDef.length>1;
+  const colAgs=colunasDef.map(c=>relLojaAgregar(c.meses,ano));
+  const todosMeses=[...new Set(colunasDef.flatMap(c=>c.meses))].sort((a,b)=>a-b);
+  const consolidadoAg=relLojaAgregar(todosMeses,ano);
+  const todasAgs=multiColuna?[...colAgs,consolidadoAg]:colAgs;
+
+  const primeiroMes=Math.min(...todosMeses);
+  const mesesAnteriores=Array.from({length:primeiroMes},(_,i)=>i);
+  const resultadoAnterior=mesesAnteriores.length?relLojaAgregar(mesesAnteriores,ano).resultado:0;
+  const saldoInicio=S.config.saldo_ant_loja+resultadoAnterior;
+  let saldoCorrente=saldoInicio;
+  const saldosColuna=colAgs.map(a=>{saldoCorrente+=a.resultado;return saldoCorrente;});
+  const saldoFinal=saldosColuna.length?saldosColuna[saldosColuna.length-1]:saldoInicio;
+
+  const linhasReceita=relLojaLinhasReceita(todasAgs);
+  const linhasDespesa=relLojaLinhasDespesa(todasAgs);
+  const ncolsTotal=colunasDef.length+(multiColuna?1:0);
+
+  const linhaCol=l=>`<tr class="cat"><td>${l.label}</td>${l.valores.slice(0,colunasDef.length).map(v=>`<td>${relN(v)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(l.valores[colunasDef.length])}</td>`:''}</tr>`;
+  const linhaDet=d=>`<tr class="det"><td>${d.label}</td>${d.valores.slice(0,colunasDef.length).map(v=>`<td>${relN(v)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(d.valores[colunasDef.length])}</td>`:''}</tr>`;
+
+  let body='';
+  body+=`<tr class="opening"><td>Saldo anterior${primeiroMes===0?' (31/12/'+(ano-1)+')':''}</td>${colunasDef.map(()=>'<td class="dash">—</td>').join('')}${multiColuna?`<td class="cons">${relN(saldoInicio)}</td>`:''}</tr>`;
+
+  body+=`<tr class="grp"><td colspan="${ncolsTotal+1}">Receitas</td></tr>`;
+  linhasReceita.forEach(l=>{
+    body+=linhaCol(l);
+    if(modo==='detalhado'&&(l.key==='doacao'||l.key==='taxa-gorn'||l.key==='iee')){
+      const det=relMergeDetalheReceita(todasAgs,l.key);
+      if(det.length)det.forEach(d=>body+=linhaDet(d));
+      else body+=`<tr class="det"><td colspan="${ncolsTotal+1}">nenhum lançamento no período</td></tr>`;
+    }
+  });
+  body+=`<tr class="tot"><td>Total de Receitas</td>${colAgs.map(a=>`<td>${relN(a.totalReceitas)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(consolidadoAg.totalReceitas)}</td>`:''}</tr>`;
+
+  body+=`<tr class="grp"><td colspan="${ncolsTotal+1}">Despesas</td></tr>`;
+  linhasDespesa.forEach(l=>{
+    body+=linhaCol(l);
+    if(modo==='detalhado'&&l.detalhe)l.detalhe.forEach(d=>body+=linhaDet(d));
+  });
+  body+=`<tr class="tot"><td>Total de Despesas</td>${colAgs.map(a=>`<td>${relN(a.totalDespesas)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(consolidadoAg.totalDespesas)}</td>`:''}</tr>`;
+
+  body+=`<tr class="res"><td>Resultado</td>${colAgs.map(a=>`<td>${relNC(a.resultado)}</td>`).join('')}${multiColuna?`<td class="cons">${relNC(consolidadoAg.resultado)}</td>`:''}</tr>`;
+  body+=`<tr class="sal"><td>Saldo acumulado</td>${saldosColuna.map(v=>`<td>${relN(v)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(saldoFinal)}</td>`:''}</tr>`;
+
+  const mensPorMes=relMensalidadePeriodo(todosMeses,ano);
+  let mensBody='',tPrev=0,tReceb=0,tAberto=0;const inadNomes=new Set();
+  mensPorMes.forEach(m=>{
+    tPrev+=m.previsto;tReceb+=m.recebido;tAberto+=m.emAberto;
+    m.devedores.forEach(nm=>inadNomes.add(nm));
+    mensBody+=`<tr class="cat"><td>${MESES_NOMES[m.mi]}</td><td>${relN(m.previsto)}</td><td>${relN(m.recebido)}</td><td>${relN(m.emAberto)}</td><td>${m.adimplencia}%</td></tr>`;
+  });
+  const adimplTot=tPrev>0?Math.round(tReceb/tPrev*100):100;
+  mensBody+=`<tr class="tot"><td>Total do período</td><td>${relN(tPrev)}</td><td>${relN(tReceb)}</td><td>${relN(tAberto)}</td><td>${adimplTot}%</td></tr>`;
+  const inadHtml=inadNomes.size?`<p class="obs">Inadimplentes no período (${inadNomes.size}): ${[...inadNomes].sort().join(', ')}</p>`:'<p class="obs">Nenhum inadimplente no período.</p>';
+
+  let anexoHtml='';
+  if(periodoTipo==='anual'){
+    let axBody='',saldoAx=S.config.saldo_ant_loja;
+    for(let mi=0;mi<12;mi++){
+      const a=relLojaAgregar([mi],ano);saldoAx+=a.resultado;
+      axBody+=`<tr class="cat"><td>${MESES_NOMES[mi]}</td><td>${relN(a.totalReceitas)}</td><td>${relN(a.totalDespesas)}</td><td>${relNC(a.resultado)}</td><td class="cons">${relN(saldoAx)}</td></tr>`;
+    }
+    anexoHtml=`<div class="annex-title">Anexo — Evolução mensal</div>
+    <table><thead><tr><th>Mês</th><th>Receitas</th><th>Despesas</th><th>Resultado</th><th class="cons">Saldo acumulado</th></tr></thead><tbody>
+    <tr class="opening"><td>Saldo anterior ${ano-1}</td><td colspan="3" class="dash">—</td><td class="cons">${relN(S.config.saldo_ant_loja)}</td></tr>
+    ${axBody}</tbody></table>`;
+  }
+
+  const modoLabel=modo==='detalhado'?'Relatório Detalhado':'Relatório Simples';
+  return`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Loja — ${relTituloPeriodo(periodoTipo,periodoValor)}</title><style>${REL_CSS}</style></head><body>
+    ${relCabecalho()}
+    <div class="rpt-title"><b>Prestação de Contas — Caixa da Loja</b><span>${relTituloPeriodo(periodoTipo,periodoValor)} · emitido em ${relDataHoje()}</span><br><span style="display:inline-block;margin-top:6px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:20px;padding:2px 10px">${modoLabel}</span></div>
+    <table><caption>Demonstrativo de Resultado do Período</caption><thead><tr><th>Conta</th>${relTableHeaders(colunasDef,multiColuna,periodoTipo)}</tr></thead><tbody>${body}</tbody></table>
+    <table><caption>Mensalidades — Previsto × Realizado</caption><thead><tr><th>Mês</th><th>Previsto</th><th>Recebido</th><th>Em aberto</th><th>Adimplência</th></tr></thead><tbody>${mensBody}</tbody></table>
+    ${inadHtml}
+    ${anexoHtml}
+    <div class="foot"><div class="sig">Tesoureiro</div><div class="sig">Venerável Mestre</div><div class="sig">Comissão de Finanças</div></div>
+    <p class="pgnote">SisFinMaçonaria · Caixa da Loja · ${relTituloPeriodo(periodoTipo,periodoValor)} · ${modoLabel}</p>
+  </body></html>`;
+}
+
+/* ── Tronco ── */
+function relTroncoAgregar(meses,ano){
+  const ent=S.troncoEntradas.filter(r=>r.ano===ano&&meses.includes(getMesIdx(r.data)));
+  const sai=S.troncoSaidas.filter(r=>getAno(r.data)===ano&&meses.includes(getMesIdx(r.data)));
+  const esp=ent.reduce((s,r)=>s+(r.esp||0),0);
+  const pix=ent.reduce((s,r)=>s+(r.pix||0),0);
+  const despesas={vovozinha:0,espirita:0,outras:0};
+  sai.forEach(r=>{
+    const d=(r.desc||'').toLowerCase();
+    if(d.includes('vovozinha'))despesas.vovozinha+=r.valor;
+    else if(d.includes('espirita')||d.includes('espírita'))despesas.espirita+=r.valor;
+    else despesas.outras+=r.valor;
+  });
+  const totalReceitas=esp+pix,totalDespesas=despesas.vovozinha+despesas.espirita+despesas.outras;
+  return{esp,pix,totalReceitas,despesas,totalDespesas,resultado:totalReceitas-totalDespesas};
+}
+function relGerarHtmlTronco(periodoTipo,periodoValor){
+  const ano=S.config.ano;
+  const colunasDef=relColunasPeriodo(periodoTipo,periodoValor);
+  const multiColuna=colunasDef.length>1;
+  const colAgs=colunasDef.map(c=>relTroncoAgregar(c.meses,ano));
+  const todosMeses=[...new Set(colunasDef.flatMap(c=>c.meses))].sort((a,b)=>a-b);
+  const consolidadoAg=relTroncoAgregar(todosMeses,ano);
+  const primeiroMes=Math.min(...todosMeses);
+  const mesesAnteriores=Array.from({length:primeiroMes},(_,i)=>i);
+  const resultadoAnterior=mesesAnteriores.length?relTroncoAgregar(mesesAnteriores,ano).resultado:0;
+  const saldoInicio=S.config.saldo_ant_tronco+resultadoAnterior;
+  let saldoCorrente=saldoInicio;
+  const saldosColuna=colAgs.map(a=>{saldoCorrente+=a.resultado;return saldoCorrente;});
+  const ncolsTotal=colunasDef.length+(multiColuna?1:0);
+
+  let body='';
+  body+=`<tr class="opening"><td>Saldo anterior${primeiroMes===0?' (31/12/'+(ano-1)+')':''}</td>${colunasDef.map(()=>'<td class="dash">—</td>').join('')}${multiColuna?`<td class="cons">${relN(saldoInicio)}</td>`:''}</tr>`;
+  body+=`<tr class="grp"><td colspan="${ncolsTotal+1}">Receitas (sessões)</td></tr>`;
+  body+=`<tr class="cat"><td>Espécie</td>${colAgs.map(a=>`<td>${relN(a.esp)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(consolidadoAg.esp)}</td>`:''}</tr>`;
+  body+=`<tr class="cat"><td>PIX</td>${colAgs.map(a=>`<td>${relN(a.pix)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(consolidadoAg.pix)}</td>`:''}</tr>`;
+  body+=`<tr class="tot"><td>Total de Receitas</td>${colAgs.map(a=>`<td>${relN(a.totalReceitas)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(consolidadoAg.totalReceitas)}</td>`:''}</tr>`;
+  body+=`<tr class="grp"><td colspan="${ncolsTotal+1}">Despesas</td></tr>`;
+  [['vovozinha','Doação — Lar da Vovozinha'],['espirita','Doação — Centro Espírita'],['outras','Outras doações']].forEach(([k,label])=>{
+    body+=`<tr class="cat"><td>${label}</td>${colAgs.map(a=>`<td>${relN(a.despesas[k])}</td>`).join('')}${multiColuna?`<td class="cons">${relN(consolidadoAg.despesas[k])}</td>`:''}</tr>`;
+  });
+  body+=`<tr class="tot"><td>Total de Despesas</td>${colAgs.map(a=>`<td>${relN(a.totalDespesas)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(consolidadoAg.totalDespesas)}</td>`:''}</tr>`;
+  body+=`<tr class="res"><td>Resultado</td>${colAgs.map(a=>`<td>${relNC(a.resultado)}</td>`).join('')}${multiColuna?`<td class="cons">${relNC(consolidadoAg.resultado)}</td>`:''}</tr>`;
+  body+=`<tr class="sal"><td>Saldo acumulado</td>${saldosColuna.map(v=>`<td>${relN(v)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(saldosColuna[saldosColuna.length-1])}</td>`:''}</tr>`;
+
+  return`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Tronco — ${relTituloPeriodo(periodoTipo,periodoValor)}</title><style>${REL_CSS}</style></head><body>
+    ${relCabecalho()}
+    <div class="rpt-title"><b>Prestação de Contas — Tronco de Beneficência</b><span>${relTituloPeriodo(periodoTipo,periodoValor)} · emitido em ${relDataHoje()}</span></div>
+    <table><caption>Demonstrativo de Resultado</caption><thead><tr><th>Conta</th>${relTableHeaders(colunasDef,multiColuna,periodoTipo)}</tr></thead><tbody>${body}</tbody></table>
+    <div class="foot"><div class="sig">Tesoureiro</div><div class="sig">Venerável Mestre</div><div class="sig">Comissão de Finanças</div></div>
+    <p class="pgnote">SisFinMaçonaria · Tronco de Beneficência · ${relTituloPeriodo(periodoTipo,periodoValor)}</p>
+  </body></html>`;
+}
+
+/* ── Ágape ── */
+function relAgapeAgregar(meses,ano){
+  const sai=S.saidasLoja.filter(r=>getAno(r.data)===ano&&r.cat==='agape'&&meses.includes(getMesIdx(r.data)));
+  const maoDeObra=sai.filter(r=>r.agapeTipo==='mao-de-obra').reduce((s,r)=>s+r.valor,0);
+  const compras=sai.filter(r=>r.agapeTipo==='compras').reduce((s,r)=>s+r.valor,0);
+  const sessoes=S.troncoEntradas.filter(r=>r.ano===ano&&meses.includes(getMesIdx(r.data))).length;
+  return{maoDeObra,compras,total:maoDeObra+compras,sessoes};
+}
+function relGerarHtmlAgape(periodoTipo,periodoValor){
+  const ano=S.config.ano;
+  const colunasDef=relColunasPeriodo(periodoTipo,periodoValor);
+  const multiColuna=colunasDef.length>1;
+  const colAgs=colunasDef.map(c=>relAgapeAgregar(c.meses,ano));
+  const todosMeses=[...new Set(colunasDef.flatMap(c=>c.meses))].sort((a,b)=>a-b);
+  const consolidadoAg=relAgapeAgregar(todosMeses,ano);
+
+  let body='';
+  body+=`<tr class="cat"><td>Mão de obra</td>${colAgs.map(a=>`<td>${relN(a.maoDeObra)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(consolidadoAg.maoDeObra)}</td>`:''}</tr>`;
+  body+=`<tr class="cat"><td>Compras</td>${colAgs.map(a=>`<td>${relN(a.compras)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(consolidadoAg.compras)}</td>`:''}</tr>`;
+  body+=`<tr class="tot"><td>Total do Ágape</td>${colAgs.map(a=>`<td>${relN(a.total)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(consolidadoAg.total)}</td>`:''}</tr>`;
+
+  let sessBody='';
+  sessBody+=`<tr class="cat"><td>Quantidade de sessões</td>${colAgs.map(a=>`<td>${a.sessoes}</td>`).join('')}${multiColuna?`<td class="cons">${consolidadoAg.sessoes}</td>`:''}</tr>`;
+  sessBody+=`<tr class="tot"><td>Gasto médio por sessão</td>${colAgs.map(a=>`<td>${a.sessoes?relN(a.total/a.sessoes):'<span class="dash">—</span>'}</td>`).join('')}${multiColuna?`<td class="cons">${consolidadoAg.sessoes?relN(consolidadoAg.total/consolidadoAg.sessoes):'<span class="dash">—</span>'}</td>`:''}</tr>`;
+
+  return`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Ágape — ${relTituloPeriodo(periodoTipo,periodoValor)}</title><style>${REL_CSS}</style></head><body>
+    ${relCabecalho()}
+    <div class="rpt-title"><b>Relatório de Ágape</b><span>${relTituloPeriodo(periodoTipo,periodoValor)} · emitido em ${relDataHoje()}</span></div>
+    <table><caption>Gastos com Ágape</caption><thead><tr><th>Conta</th>${relTableHeaders(colunasDef,multiColuna,periodoTipo)}</tr></thead><tbody>${body}</tbody></table>
+    <table><caption>Sessões e média por sessão</caption><thead><tr><th>Conta</th>${relTableHeaders(colunasDef,multiColuna,periodoTipo)}</tr></thead><tbody>${sessBody}</tbody></table>
+    <p class="obs">"Sessão" = lançamentos do Tronco de Beneficência no período.</p>
+    <div class="foot"><div class="sig">Tesoureiro</div><div class="sig">Comissão do Ágape</div><div class="sig">Venerável Mestre</div></div>
+    <p class="pgnote">SisFinMaçonaria · Ágape · ${relTituloPeriodo(periodoTipo,periodoValor)}</p>
+  </body></html>`;
+}
+
+/* ── Modal / UI ── */
+function abrirModalRelatorio(){
+  const hoje=new Date();
+  const mesSel=document.getElementById('rel-mes');
+  mesSel.innerHTML='';
+  MESES_NOMES.forEach((m,i)=>{const op=document.createElement('option');op.value=i;op.textContent=m+' '+S.config.ano;mesSel.appendChild(op);});
+  mesSel.value=hoje.getMonth();
+  document.getElementById('rel-tri').value=Math.min(4,Math.floor(hoje.getMonth()/3)+1);
+  document.getElementById('rel-caixa').value='loja';
+  document.getElementById('rel-periodo').value='mensal';
+  document.getElementById('rel-modo').value='simples';
+  relAtualizarModal();
+  document.getElementById('rel-modal-overlay').classList.add('open');
+}
+function closeRelModal(){document.getElementById('rel-modal-overlay').classList.remove('open');}
+function relAtualizarModal(){
+  const periodo=document.getElementById('rel-periodo').value;
+  const caixa=document.getElementById('rel-caixa').value;
+  document.getElementById('rel-mes-wrap').style.display=periodo==='mensal'?'':'none';
+  document.getElementById('rel-tri-wrap').style.display=periodo==='trimestral'?'':'none';
+  document.getElementById('rel-modo-wrap').style.display=caixa==='loja'?'':'none';
+}
+function relGerar(){
+  const caixa=document.getElementById('rel-caixa').value;
+  const periodo=document.getElementById('rel-periodo').value;
+  const valor=periodo==='mensal'?document.getElementById('rel-mes').value:periodo==='trimestral'?document.getElementById('rel-tri').value:null;
+  const modo=document.getElementById('rel-modo').value;
+  let html;
+  try{
+    if(caixa==='loja')html=relGerarHtmlLoja(periodo,valor,modo);
+    else if(caixa==='tronco')html=relGerarHtmlTronco(periodo,valor);
+    else html=relGerarHtmlAgape(periodo,valor);
+  }catch(e){console.error(e);toast('Erro ao gerar relatório: '+e.message,'err',5000);return;}
+  const win=window.open('','_blank');
+  if(!win){toast('Autorize pop-ups para gerar o relatório','err',5000);return;}
+  win.document.write(html);win.document.close();
+  win.onload=()=>{win.print();};
+  closeRelModal();
 }
 
 window.addEventListener('DOMContentLoaded',async()=>{
