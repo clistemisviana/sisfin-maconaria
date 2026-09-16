@@ -4015,15 +4015,13 @@ function relGerarHtmlLoja(periodoTipo,periodoValor,modo){
   body+=`<tr class="sal"><td>Saldo acumulado</td>${saldosColuna.map(v=>`<td>${relN(v)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(saldoFinal)}</td>`:''}</tr>`;
 
   const mensPorMes=relMensalidadePeriodo(todosMeses,ano);
-  let mensBody='',tPrev=0,tReceb=0,tAberto=0;const inadNomes=new Set();
+  let mensBody='',tPrev=0,tReceb=0,tAberto=0;
   mensPorMes.forEach(m=>{
     tPrev+=m.previsto;tReceb+=m.recebido;tAberto+=m.emAberto;
-    m.devedores.forEach(nm=>inadNomes.add(nm));
     mensBody+=`<tr class="cat"><td>${MESES_NOMES[m.mi]}</td><td>${relN(m.previsto)}</td><td>${relN(m.recebido)}</td><td>${relN(m.emAberto)}</td><td>${m.adimplencia}%</td></tr>`;
   });
   const adimplTot=tPrev>0?Math.round(tReceb/tPrev*100):100;
   mensBody+=`<tr class="tot"><td>Total do período</td><td>${relN(tPrev)}</td><td>${relN(tReceb)}</td><td>${relN(tAberto)}</td><td>${adimplTot}%</td></tr>`;
-  const inadHtml=inadNomes.size?`<p class="obs">Inadimplentes no período (${inadNomes.size}): ${[...inadNomes].sort().join(', ')}</p>`:'<p class="obs">Nenhum inadimplente no período.</p>';
   const mensNota=`<p class="obs" style="font-style:italic">"Mensalidades" no demonstrativo acima é o valor que entrou no caixa no período (data do pagamento) — por isso soma no saldo. "Recebido" aqui embaixo é por mês a que a mensalidade se refere, não importa quando foi paga — por isso os dois totais podem divergir quando alguém paga em atraso.</p>`;
 
   let anexoHtml='';
@@ -4046,7 +4044,6 @@ function relGerarHtmlLoja(periodoTipo,periodoValor,modo){
     <table><caption>Demonstrativo de Resultado do Período</caption><thead><tr><th>Conta</th>${relTableHeaders(colunasDef,multiColuna,periodoTipo)}</tr></thead><tbody>${body}</tbody></table>
     <table><caption>Mensalidades — Previsto × Realizado</caption><thead><tr><th>Mês</th><th>Previsto</th><th>Recebido</th><th>Em aberto</th><th>Adimplência</th></tr></thead><tbody>${mensBody}</tbody></table>
     ${mensNota}
-    ${inadHtml}
     ${anexoHtml}
     <div class="foot"><div class="sig">Tesoureiro</div><div class="sig">Venerável Mestre</div><div class="sig">Comissão de Finanças</div></div>
     <p class="pgnote">SisFinMaçonaria · Caixa da Loja · ${relTituloPeriodo(periodoTipo,periodoValor)} · ${modoLabel}</p>
