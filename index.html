@@ -4024,6 +4024,7 @@ function relGerarHtmlLoja(periodoTipo,periodoValor,modo){
   const adimplTot=tPrev>0?Math.round(tReceb/tPrev*100):100;
   mensBody+=`<tr class="tot"><td>Total do período</td><td>${relN(tPrev)}</td><td>${relN(tReceb)}</td><td>${relN(tAberto)}</td><td>${adimplTot}%</td></tr>`;
   const inadHtml=inadNomes.size?`<p class="obs">Inadimplentes no período (${inadNomes.size}): ${[...inadNomes].sort().join(', ')}</p>`:'<p class="obs">Nenhum inadimplente no período.</p>';
+  const mensNota=`<p class="obs" style="font-style:italic">"Mensalidades" no demonstrativo acima é o valor que entrou no caixa no período (data do pagamento) — por isso soma no saldo. "Recebido" aqui embaixo é por mês a que a mensalidade se refere, não importa quando foi paga — por isso os dois totais podem divergir quando alguém paga em atraso.</p>`;
 
   let anexoHtml='';
   if(periodoTipo==='anual'){
@@ -4044,6 +4045,7 @@ function relGerarHtmlLoja(periodoTipo,periodoValor,modo){
     <div class="rpt-title"><b>Prestação de Contas — Caixa da Loja</b><span>${relTituloPeriodo(periodoTipo,periodoValor)} · emitido em ${relDataHoje()}</span><br><span style="display:inline-block;margin-top:6px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:20px;padding:2px 10px">${modoLabel}</span></div>
     <table><caption>Demonstrativo de Resultado do Período</caption><thead><tr><th>Conta</th>${relTableHeaders(colunasDef,multiColuna,periodoTipo)}</tr></thead><tbody>${body}</tbody></table>
     <table><caption>Mensalidades — Previsto × Realizado</caption><thead><tr><th>Mês</th><th>Previsto</th><th>Recebido</th><th>Em aberto</th><th>Adimplência</th></tr></thead><tbody>${mensBody}</tbody></table>
+    ${mensNota}
     ${inadHtml}
     ${anexoHtml}
     <div class="foot"><div class="sig">Tesoureiro</div><div class="sig">Venerável Mestre</div><div class="sig">Comissão de Finanças</div></div>
