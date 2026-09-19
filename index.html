@@ -577,7 +577,8 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
 .login-overlay.hidden{display:none}
 .login-box{width:100%;max-width:400px;background:rgba(255,255,255,.04);border:1px solid rgba(139,92,246,.25);border-radius:24px;padding:40px 36px;box-shadow:0 20px 60px rgba(0,0,0,.5);backdrop-filter:blur(20px);}
 .login-logo{width:64px;height:64px;border-radius:50%;border:2px solid rgba(139,92,246,.5);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:24px;color:var(--violet2);background:rgba(124,58,237,.15);margin:0 auto 20px;overflow:hidden;}
-.login-logo img{width:100%;height:100%;object-fit:cover;display:none}
+.login-logo img{width:100%;height:100%;object-fit:contain;display:none}
+.login-logo.has-img{width:150px;height:150px;font-size:0;border:none;background:transparent;overflow:visible;margin-bottom:16px}
 .login-title{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:#fff;text-align:center;margin-bottom:4px}
 .login-sub{font-size:12px;color:rgba(255,255,255,.4);text-align:center;margin-bottom:28px}
 .login-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
@@ -3601,6 +3602,11 @@ function renderCfgIrmaos(){
 }
 
 /* ═══════════════ LOGO — persiste via Supabase ═══════════════ */
+function setLoginLogo(url){
+  const li=document.getElementById('login-logo-img');if(!li)return;
+  li.src=url;li.style.display='block';
+  const box=document.getElementById('login-logo');if(box)box.classList.add('has-img');
+}
 function aplicarLogo(url){
   ['sb-logo-img','tb-logo-img','cfg-logo-img'].forEach(id=>{const img=document.getElementById(id);if(img){img.src=url;img.style.display='block';}});
   ['sb-logo-el','tb-emblem','cfg-logo'].forEach(id=>{const el=document.getElementById(id);if(el&&el.childNodes[0]&&el.childNodes[0].nodeType===3)el.childNodes[0].textContent='';});
@@ -3767,7 +3773,7 @@ async function init(){
   document.getElementById('login-loja-sub').textContent=S.config.nome_loja;
   if(S.config.logo_url){
     aplicarLogo(S.config.logo_url);
-    const li=document.getElementById('login-logo-img');if(li){li.src=S.config.logo_url;li.style.display='block';}
+    setLoginLogo(S.config.logo_url);
   }
   recalcTaloes();elAtualizarTalaoForm();
   const hj=hoje();['el-data','sl-data','tr-data','ts-data'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=hj;});
@@ -3830,6 +3836,7 @@ body{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);f
 .rpt-head .lodge{font-family:Georgia,"Times New Roman",serif}
 .rpt-head .lodge b{font-size:17px;letter-spacing:.02em;display:block}
 .rpt-head .lodge span{font-size:11px;color:var(--soft)}
+.rpt-head .rpt-logo{width:84px;height:84px;object-fit:contain;flex:none;margin-top:-6px}
 .rpt-head .emblem{width:52px;height:52px;border:2px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
 .rpt-title{text-align:center;margin:16px 0 22px}
 .rpt-title b{font-size:15px;letter-spacing:.09em;text-transform:uppercase;display:block}
@@ -3885,7 +3892,7 @@ function relTableHeaders(colunasDef,multiColuna,periodoTipo){
   return colunasDef.map(c=>`<th>${c.label}</th>`).join('')+(multiColuna?`<th class="cons">${periodoTipo==='anual'?'Ano':'Consolidado'}</th>`:'');
 }
 function relCabecalho(){
-  return`<div class="rpt-head"><div class="lodge"><b>${S.config.nome_loja||'Loja Maçônica'}</b><span>Rua Santo Antônio, 736 — Cidade Alta — Natal/RN · Fundada em 1899</span></div><div class="emblem">⌖</div></div>`;
+  return`<div class="rpt-head"><div class="lodge"><b>${S.config.nome_loja||'Loja Maçônica'}</b><span>Rua Santo Antônio, 736 — Cidade Alta — Natal/RN · Fundada em 1899</span></div>${S.config.logo_url?`<img class="rpt-logo" src="${S.config.logo_url}" alt="">`:'<div class="emblem">⌖</div>'}</div>`;
 }
 
 /* ── Loja ── */
@@ -4260,7 +4267,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
     diag('Banco OK');
     if(data){
       document.getElementById('login-loja-sub').textContent=data.nome_loja||'Sistema Financeiro';
-      if(data.logo_url){const li=document.getElementById('login-logo-img');if(li){li.src=data.logo_url;li.style.display='block';}}
+      if(data.logo_url)setLoginLogo(data.logo_url);
     }
   }catch(e){
     diag('Banco: '+e.message+' (login disponível)');
