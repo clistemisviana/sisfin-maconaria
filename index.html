@@ -4070,15 +4070,15 @@ function relTroncoAgregar(meses,ano){
   const sai=S.troncoSaidas.filter(r=>getAno(r.data)===ano&&meses.includes(getMesIdx(r.data)));
   const esp=ent.reduce((s,r)=>s+(r.esp||0),0);
   const pix=ent.reduce((s,r)=>s+(r.pix||0),0);
-  const despesas={vovozinha:0,espirita:0,outras:0};
+  const despesas={vovozinha:0,espirita:0,outras:0};const outrasDet={};
   sai.forEach(r=>{
     const d=(r.desc||'').toLowerCase();
     if(d.includes('vovozinha'))despesas.vovozinha+=r.valor;
     else if(d.includes('espirita')||d.includes('espírita'))despesas.espirita+=r.valor;
-    else despesas.outras+=r.valor;
+    else{despesas.outras+=r.valor;const l=(r.desc||'').trim()||'(sem descrição)';outrasDet[l]=(outrasDet[l]||0)+r.valor;}
   });
   const totalReceitas=esp+pix,totalDespesas=despesas.vovozinha+despesas.espirita+despesas.outras;
-  return{esp,pix,totalReceitas,despesas,totalDespesas,resultado:totalReceitas-totalDespesas};
+  return{esp,pix,totalReceitas,despesas,outrasDet,totalDespesas,resultado:totalReceitas-totalDespesas};
 }
 function relGerarHtmlTronco(periodoTipo,periodoValor){
   const ano=S.config.ano;
@@ -4104,6 +4104,13 @@ function relGerarHtmlTronco(periodoTipo,periodoValor){
   body+=`<tr class="grp"><td colspan="${ncolsTotal+1}">Despesas</td></tr>`;
   [['vovozinha','Doação — Lar da Vovozinha'],['espirita','Doação — Centro Espírita'],['outras','Outras doações']].forEach(([k,label])=>{
     body+=`<tr class="cat"><td>${label}</td>${colAgs.map(a=>`<td>${relN(a.despesas[k])}</td>`).join('')}${multiColuna?`<td class="cons">${relN(consolidadoAg.despesas[k])}</td>`:''}</tr>`;
+    if(k==='outras'){
+      const todasAgsT=multiColuna?[...colAgs,consolidadoAg]:colAgs;
+      const labels=new Set();todasAgsT.forEach(a=>Object.keys(a.outrasDet).forEach(l=>labels.add(l)));
+      [...labels].sort().forEach(l=>{
+        body+=`<tr class="det"><td>${l}</td>${colAgs.map(a=>`<td>${relN(a.outrasDet[l]||0)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(consolidadoAg.outrasDet[l]||0)}</td>`:''}</tr>`;
+      });
+    }
   });
   body+=`<tr class="tot"><td>Total de Despesas</td>${colAgs.map(a=>`<td>${relN(a.totalDespesas)}</td>`).join('')}${multiColuna?`<td class="cons">${relN(consolidadoAg.totalDespesas)}</td>`:''}</tr>`;
   body+=`<tr class="res"><td>Resultado</td>${colAgs.map(a=>`<td>${relNC(a.resultado)}</td>`).join('')}${multiColuna?`<td class="cons">${relNC(consolidadoAg.resultado)}</td>`:''}</tr>`;
