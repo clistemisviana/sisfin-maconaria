@@ -76,3 +76,4 @@ ficarem em sincronia.
 - Repositório **público**: nunca commitar segredos, backups com dados dos irmãos, nem o briefing.
 - Nada de reformatar o arquivo inteiro — manter os diffs pequenos e revisáveis.
 - Supabase no plano free pausa após 7 dias sem acesso; o sistema já tem alerta interno para isso.
+
