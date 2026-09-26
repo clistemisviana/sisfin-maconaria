@@ -859,6 +859,14 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
       </div>
       <div style="position:relative;height:200px"><canvas id="c-tronco-sessoes"></canvas></div>
     </div>
+    <!-- Média por sessão — por tipo de sessão -->
+    <div class="cards-row c5" style="margin-top:14px">
+      <div class="kpi"><div class="kpi-label">📊 Média por sessão</div><div class="kpi-val" id="trm-todas-val" style="color:var(--green)">—</div><div class="kpi-sub" id="trm-todas-sub">—</div></div>
+      <div class="kpi"><div class="kpi-label">Aprendiz (Ap)</div><div class="kpi-val" id="trm-aprendiz-val" style="color:#818cf8">—</div><div class="kpi-sub" id="trm-aprendiz-sub">—</div></div>
+      <div class="kpi"><div class="kpi-label">Companheiro (Cp)</div><div class="kpi-val" id="trm-companheiro-val" style="color:var(--orange)">—</div><div class="kpi-sub" id="trm-companheiro-sub">—</div></div>
+      <div class="kpi"><div class="kpi-label">Mestre (MM)</div><div class="kpi-val" id="trm-mestre-val" style="color:var(--violet2)">—</div><div class="kpi-sub" id="trm-mestre-sub">—</div></div>
+      <div class="kpi"><div class="kpi-label">Magna Pública (MP)</div><div class="kpi-val" id="trm-magna-val" style="color:var(--pink)">—</div><div class="kpi-sub" id="trm-magna-sub">—</div></div>
+    </div>
 
     <div class="sec-div">🍽️ Ágape</div>
     <div class="dash-filters"><span class="df-label">Mês</span><div id="df-agape-meses" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
@@ -1092,6 +1100,7 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
       <div style="display:flex;gap:8px"><button class="btn btn-excel btn-sm" onclick="exportExcel('tr')">📥 Excel</button><div class="count-badge" style="background:rgba(34,211,160,.12);color:var(--green)" id="tr-badge">0</div></div>
     </div>
     <div class="tbl-filters"><input class="tbl-search" id="tr-search" placeholder="🔍 Pesquisar..." oninput="renderTrTabela()"><div id="tr-tbl-meses" style="display:flex;flex-wrap:wrap;gap:4px"></div></div>
+    <div class="tbl-filters"><span class="df-label">Sessão</span><div id="tr-tbl-sessoes" style="display:flex;flex-wrap:wrap;gap:4px"></div></div>
     <div class="tbl-wrap"><table>
       <thead><tr>
         <th style="width:88px">Data</th><th style="width:110px" class="center sep">Sessão</th><th class="sep">Referência</th>
@@ -1547,6 +1556,7 @@ const CAT_LABEL={admin:'Administrativo',agape:'Ágape',caern:'CAERN',cosern:'COS
 const DEST_LABEL={lar:'Lar da Vovozinha',ce:'Centro Espírita',outros:'Outros'};
 const SESSAO_LABEL={aprendiz:'Aprendiz',companheiro:'Companheiro',mestre:'Mestre',magna:'Magna Pública'};
 const SESSAO_CHIP={aprendiz:'chip-ap',companheiro:'chip-co',mestre:'chip-me',magna:'chip-mp'};
+const SESSAO_ABREV={aprendiz:'Ap',companheiro:'Cp',mestre:'MM',magna:'MP'};
 const STATUS_LABEL={mensalista:'Mensalista',remido:'Remido',honorario:'Honorário',irregular:'Irregularizado',placetado:'Placetado'};
 const STATUS_CHIP={mensalista:'chip-mensalista',remido:'chip-remido',honorario:'chip-honorario',irregular:'chip-irregular',placetado:'chip-placetado'};
 const GRAU_LABEL={aprendiz:'Aprendiz',companheiro:'Companheiro',mestre:'Mestre'};
@@ -1568,13 +1578,19 @@ const S={
   elTalao:1,elMesesSel:[],elMesesAno:'atual',elSN:false,
   elEditId:null,slEditId:null,trEditId:null,tsEditId:null,cfgIrEditId:null,cfgUsrEditId:null,
   dfLojaMeses:[],dfTroncoMeses:[],dfAgapeMeses:[],
-  tblMeses:{el:[],sl:[],tr:[],ts:[]},
+  tblMeses:{el:[],sl:[],tr:[],ts:[]},tblSessoesTr:[],
 };
 
 /* ═══════════════ UTILS ═══════════════ */
 const fmt=v=>'R$\u00a0'+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtK=v=>'R$\u00a0'+Number(v||0).toLocaleString('pt-BR',{notation:'compact',maximumFractionDigits:1});
 const fmtDate=s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;};
+const fmtInt=v=>'R$ '+Math.round(Number(v||0)).toLocaleString('pt-BR');
+const fmtDM=s=>{if(!s)return'—';const[,m,d]=s.split('-');return`${d}/${m}`;};
+// Rótulo do eixo X dos gráficos por sessão: ['dd/mm','Ap']
+const labelSessao=(data,sessao)=>sessao?[fmtDM(data),SESSAO_ABREV[sessao]||sessao]:[fmtDM(data)];
+// Índices do maior e do menor valor (só marca quando há 2+ pontos e valores diferentes)
+function idxMaxMin(vals){if(vals.length<2)return{iMax:-1,iMin:-1};let iMax=0,iMin=0;vals.forEach((v,i)=>{if(v>vals[iMax])iMax=i;if(v<vals[iMin])iMin=i;});return vals[iMax]===vals[iMin]?{iMax:-1,iMin:-1}:{iMax,iMin};}
 const getAno=s=>s?parseInt(s.split('-')[0]):S.config.ano;
 const getMesIdx=s=>s?new Date(s+' ').getMonth():-1;
 const hoje=()=>new Date().toISOString().slice(0,10);
@@ -1698,6 +1714,7 @@ function filterByTbl(records,prefix,dateFn){
   const ano=S.config.ano;const meses=S.tblMeses[prefix];const q=(document.getElementById(`${prefix}-search`)||{}).value||'';
   return records.filter(r=>{
     if(getAno(dateFn(r))!==ano)return false;if(meses.length>0&&!meses.includes(getMesIdx(dateFn(r))))return false;
+    if(prefix==='tr'&&S.tblSessoesTr.length>0&&!S.tblSessoesTr.includes(r.sessao))return false;
     if(q&&!JSON.stringify(r).toLowerCase().includes(q.toLowerCase()))return false;return true;
   });
 }
@@ -1928,25 +1945,27 @@ function renderDashTronco(){
   animBarPct('dp-lar',trLar/tot*100);animBarPct('dp-ce',trCE/tot*100);animBarPct('dp-out',trOut/tot*100);
   animVal(document.getElementById('dv-lar'),trLar);animVal(document.getElementById('dv-ce'),trCE);animVal(document.getElementById('dv-out'),trOut);
 
+  // Cards de média por sessão (seguem o filtro de mês)
+  renderDashTroncoMedias(trEnt);
+
   // Gráfico de linha — arrecadação por sessão do tronco
   if(CC['c-tronco-sessoes'])CC['c-tronco-sessoes'].destroy();
   const canvTr=document.getElementById('c-tronco-sessoes');if(!canvTr)return;
   // Ordenar sessões por data
   const sessoes=[...trEnt].sort((a,b)=>a.data.localeCompare(b.data));
-  const trLabels=sessoes.map(r=>{
-    const d=fmtDate(r.data);
-    const tipo=r.sessao||r.tipo_sessao||'';
-    return tipo?[d,tipo]:[d];
-  });
+  const trLabels=sessoes.map(r=>labelSessao(r.data,r.sessao||r.tipo_sessao||''));
   const trVals=sessoes.map(r=>r.total||0);
+  // Maior arrecadação em verde, menor em vermelho; demais pontos brancos
+  const trMM=idxMaxMin(trVals);
+  const trPtCor=trVals.map((v,i)=>i===trMM.iMax?'#22c55e':i===trMM.iMin?'#ef4444':'#ffffff');
   CC['c-tronco-sessoes']=new Chart(canvTr,{
     type:'line',
     data:{labels:trLabels,datasets:[{
       label:'Arrecadado',data:trVals,
       borderColor:'#22d3a0',backgroundColor:'rgba(34,211,160,.08)',
       fill:true,tension:.4,borderWidth:2.5,
-      pointRadius:5,pointBackgroundColor:'#22d3a0',
-      pointBorderColor:'#fff',pointBorderWidth:1.5,
+      pointRadius:trVals.map((v,i)=>i===trMM.iMax||i===trMM.iMin?7:5),pointBackgroundColor:trPtCor,
+      pointBorderColor:trVals.map((v,i)=>i===trMM.iMax||i===trMM.iMin?'#fff':'#22d3a0'),pointBorderWidth:2,
     }]},
     options:{
       responsive:true,maintainAspectRatio:false,animation:{duration:700},
@@ -1956,7 +1975,10 @@ function renderDashTronco(){
         tooltip:{
           backgroundColor:'rgba(13,14,42,.95)',borderColor:'rgba(34,211,160,.3)',
           borderWidth:1,padding:10,cornerRadius:9,titleColor:'#fff',bodyColor:'rgba(255,255,255,.85)',
-          callbacks:{label:c=>' '+fmt(c.parsed.y)}
+          callbacks:{
+            title:items=>{const r=sessoes[items[0].dataIndex];return`${fmtDate(r.data)} — ${SESSAO_LABEL[r.sessao]||r.sessao||''}`;},
+            label:c=>' '+fmt(c.parsed.y)+(c.dataIndex===trMM.iMax?' (maior)':c.dataIndex===trMM.iMin?' (menor)':'')
+          }
         }
       },
       layout:{padding:{top:32,left:16,right:16,bottom:4}},
@@ -1966,6 +1988,17 @@ function renderDashTronco(){
       }
     },
     plugins:[lineDataLabels]
+  });
+}
+
+function renderDashTroncoMedias(trEnt){
+  const grupos=[['todas',trEnt],...['aprendiz','companheiro','mestre','magna'].map(t=>[t,trEnt.filter(r=>r.sessao===t)])];
+  grupos.forEach(([k,regs])=>{
+    const n=regs.length;const tot=regs.reduce((s,r)=>s+r.total,0);const irm=regs.reduce((s,r)=>s+(r.qtd||0),0);
+    const vEl=document.getElementById(`trm-${k}-val`);const sEl=document.getElementById(`trm-${k}-sub`);if(!vEl||!sEl)return;
+    if(n===0){vEl.textContent='—';sEl.textContent='nenhuma sessão';return;}
+    vEl.textContent=fmt(tot/n);
+    sEl.innerHTML=`${n} ${n===1?'sessão':'sessões'} · ${fmt(tot)}<br>${fmt(irm>0?tot/irm:0)} por irmão`;
   });
 }
 
@@ -2076,11 +2109,11 @@ function renderDashAgape(){
   let acumMedia=0;
   const mediaMovel=datas.map((d,i)=>{acumMedia+=porData[d];return Math.round(acumMedia/(i+1));});
   const valoresSessao=datas.map(d=>Math.round(porData[d]));
-  const labs=datas.map(d=>{
-    const trEntry=S.troncoEntradas.find(r=>r.data===d);
-    const sessao=trEntry?.sessao||trEntry?.tipo_sessao||'';
-    return sessao?[fmtDate(d),sessao]:[fmtDate(d)];
-  });
+  const sessaoDe=d=>{const trEntry=S.troncoEntradas.find(r=>r.data===d);return trEntry?.sessao||trEntry?.tipo_sessao||'';};
+  const labs=datas.map(d=>labelSessao(d,sessaoDe(d)));
+  // Maior média em vermelho, menor em verde; demais pontos brancos
+  const agMM=idxMaxMin(mediaMovel);
+  const agDestaque=i=>i===agMM.iMax||i===agMM.iMin;
 
   const ctxM=canvMedia.getContext('2d');
   const gradBar=ctxM.createLinearGradient(0,0,0,200);
@@ -2113,9 +2146,9 @@ function renderDashAgape(){
         fill:true,
         tension:.4,
         borderWidth:2.5,
-        pointRadius:5,
-        pointBackgroundColor:'#ff3333',
-        pointBorderColor:'rgba(13,14,42,.9)',
+        pointRadius:mediaMovel.map((v,i)=>agDestaque(i)?7:5),
+        pointBackgroundColor:mediaMovel.map((v,i)=>i===agMM.iMax?'#ef4444':i===agMM.iMin?'#22c55e':'#ffffff'),
+        pointBorderColor:mediaMovel.map((v,i)=>agDestaque(i)?'#fff':'#ff3333'),
         pointBorderWidth:2,
         order:1,
       }
@@ -2129,9 +2162,10 @@ function renderDashAgape(){
           backgroundColor:'rgba(13,14,42,.95)',borderColor:'rgba(255,107,0,.3)',
           borderWidth:1,padding:10,cornerRadius:8,titleColor:'#fff',bodyColor:'rgba(255,255,255,.8)',
           callbacks:{
+            title:items=>{const d=datas[items[0].dataIndex];const s=sessaoDe(d);return fmtDate(d)+(s?` — ${SESSAO_LABEL[s]||s}`:'');},
             label:c=>{
               if(c.datasetIndex===0)return ' Sessão: '+fmt(c.parsed.y);
-              return ' Média: '+fmt(c.parsed.y);
+              return ' Média: '+fmt(c.parsed.y)+(c.dataIndex===agMM.iMax?' (maior)':c.dataIndex===agMM.iMin?' (menor)':'');
             }
           }
         }
@@ -2155,19 +2189,23 @@ function renderDashAgape(){
           ctx.font='bold 10px Arial';
           ctx.fillStyle='rgba(255,255,255,0.92)';
           ctx.textAlign='center';
-          ctx.fillText(fmt(v),bar.x,bar.base-10);
+          ctx.fillText(fmtInt(v),bar.x,bar.base-10);
           ctx.restore();
         });
-        // Rótulos da LINHA — acima de cada ponto (vermelho claro)
+        // Rótulos da LINHA — acima de cada ponto, em etiqueta escura para não sumir sobre a coluna
         const metaLine=chart.getDatasetMeta(1);
         metaLine.data.forEach((point,i)=>{
           const v=data.datasets[1].data[i];
           if(!v)return;
+          const txt=fmtInt(v);
           ctx.save();
           ctx.font='bold 10px Arial';
-          ctx.fillStyle='#ff8080';
-          ctx.textAlign='center';
-          ctx.fillText(fmt(v),point.x,point.y-12);
+          ctx.textAlign='center';ctx.textBaseline='middle';
+          const w=ctx.measureText(txt).width+8,h=14,x=point.x-w/2,y=point.y-12-h;
+          ctx.fillStyle='rgba(13,14,42,.88)';
+          ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,4);else ctx.rect(x,y,w,h);ctx.fill();
+          ctx.fillStyle=i===agMM.iMax?'#ff6b6b':i===agMM.iMin?'#4ade80':'#ffd0d0';
+          ctx.fillText(txt,point.x,y+h/2+.5);
           ctx.restore();
         });
       }
@@ -3001,7 +3039,16 @@ function trCancelarEdicao(){
   ['tr-sessao','tr-qtd','tr-total','tr-esp','tr-qtdpix','tr-magna'].forEach(id=>document.getElementById(id).value='');document.getElementById('tr-data').value=hoje();document.getElementById('tr-pix').value='';document.getElementById('tr-magna-wrap').classList.remove('visible');document.getElementById('tr-btn').disabled=true;
 }
 function trExcluirRegistro(id){openModal(`Excluir entrada do tronco?`,async()=>{try{await dbDelete('tronco_entradas',id);S.troncoEntradas=S.troncoEntradas.filter(x=>x.id!==id);refreshTblMeses('tr');renderTrTabela();toast('Excluído ✓');}catch(e){}});}
+// Filtro por tipo de sessão (Total = sem filtro; pode escolher mais de um)
+function buildTrSessoes(){
+  const c=document.getElementById('tr-tbl-sessoes');if(!c)return;
+  const sel=S.tblSessoesTr;c.innerHTML='';
+  const mk=(txt,ativo,onclick)=>{const b=document.createElement('button');b.className='df-chip btn-sm'+(ativo?' sel':'');b.textContent=txt;b.type='button';b.onclick=onclick;c.appendChild(b);};
+  mk('Total',sel.length===0,()=>{sel.length=0;renderTrTabela();});
+  Object.keys(SESSAO_LABEL).forEach(t=>mk(SESSAO_LABEL[t],sel.includes(t),()=>{if(sel.includes(t))sel.splice(sel.indexOf(t),1);else sel.push(t);if(sel.length===Object.keys(SESSAO_LABEL).length)sel.length=0;renderTrTabela();}));
+}
 function renderTrTabela(){
+  buildTrSessoes();
   const tbody=document.getElementById('tr-tbody');const tfoot=document.getElementById('tr-tfoot');const filtradas=filterByTbl(S.troncoEntradas,'tr',r=>r.data);
   document.getElementById('tr-badge').textContent=filtradas.length+' registro'+(filtradas.length!==1?'s':'');
   if(!filtradas.length){tbody.innerHTML='<tr class="empty-row"><td colspan="11">Nenhuma entrada registrada.</td></tr>';tfoot.style.display='none';return;}
