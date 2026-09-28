@@ -688,13 +688,13 @@ td.hl-red{background:rgba(239,68,68,.1)!important;color:var(--red);font-weight:7
 
 <!-- BOTÃO MENU MOBILE -->
 <button class="menu-toggle" id="menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">☰</button>
-<!-- OVERLAY MOBILE -->
-<div class="sb-overlay" id="sb-overlay" onclick="closeMobileMenu()"></div>
 
 <!-- Zona de hover invisível para abrir a sidebar (desktop) -->
 <div class="sb-hover-zone" id="sb-hover-zone"></div>
 
 <div class="app">
+<!-- OVERLAY MOBILE — dentro do .app (z-index:1) para ficar ATRÁS da sidebar; fora dele cobria o menu e engolia os toques -->
+<div class="sb-overlay" id="sb-overlay" onclick="closeMobileMenu()"></div>
 <!-- SIDEBAR -->
 <nav class="sidebar" id="sidebar">
   <div class="sb-header">
